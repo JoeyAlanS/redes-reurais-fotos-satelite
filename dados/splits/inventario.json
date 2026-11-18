@@ -1,0 +1,60 @@
+{
+  "origem": "/home/joey/Documentos/GitHub/redes-reurais-fotos-satelite/dados/raw/NWPU-RESISC45",
+  "semente": 42,
+  "total": 7000,
+  "contagens": {
+    "airport": {
+      "validacao": 104,
+      "treino": 491,
+      "teste": 105
+    },
+    "beach": {
+      "treino": 490,
+      "teste": 105,
+      "validacao": 105
+    },
+    "circular_farmland": {
+      "treino": 490,
+      "validacao": 105,
+      "teste": 105
+    },
+    "dense_residential": {
+      "treino": 490,
+      "validacao": 105,
+      "teste": 105
+    },
+    "desert": {
+      "treino": 490,
+      "validacao": 105,
+      "teste": 105
+    },
+    "forest": {
+      "treino": 490,
+      "validacao": 105,
+      "teste": 105
+    },
+    "harbor": {
+      "treino": 490,
+      "validacao": 105,
+      "teste": 105
+    },
+    "mountain": {
+      "treino": 490,
+      "teste": 105,
+      "validacao": 105
+    },
+    "river": {
+      "treino": 490,
+      "teste": 105,
+      "validacao": 105
+    },
+    "storage_tank": {
+      "treino": 490,
+      "validacao": 105,
+      "teste": 105
+    }
+  },
+  "duplicatas_exatas": 6,
+  "problemas": [],
+  "observacao": "Hashes detectam duplicatas exatas; versões visualmente semelhantes exigem revisão manual antes do treino."
+}
