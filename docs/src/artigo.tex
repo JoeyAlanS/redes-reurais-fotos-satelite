@@ -1,0 +1,236 @@
+% Artigo do Projeto 3 — compilar com docs/src/compilar.sh (XeLaTeX).
+\documentclass[12pt,a4paper]{article}
+\usepackage{fontspec}
+\setmainfont{Liberation Serif}
+\setsansfont{Liberation Sans}
+\setmonofont[Scale=0.88]{Liberation Mono}
+\usepackage[none]{hyphenat}  % TeX Live sem padrões de hifenização em português: texto sem hifenizar
+\usepackage[top=3cm,left=3cm,bottom=2cm,right=2cm]{geometry}
+\usepackage{xcolor,graphicx,booktabs,tabularx,multirow,array,float,microtype,setspace,enumitem}
+\usepackage[labelsep=endash,font=small,labelfont=bf,skip=4pt]{caption}
+\usepackage{titlesec}
+\usepackage[hidelinks]{hyperref}
+\input{macros}
+\renewcommand{\figurename}{Figura}
+\renewcommand{\tablename}{Tabela}
+\renewcommand{\refname}{Referências}
+
+\setstretch{1.0}
+\setlength{\parindent}{1.25cm}
+\setlength{\parskip}{3pt}
+\emergencystretch=2em
+\titleformat{\section}{\normalfont\bfseries}{\thesection}{0.5em}{\MakeUppercase}
+\titleformat{\subsection}{\normalfont\bfseries}{\thesubsection}{0.5em}{}
+\titlespacing*{\section}{0pt}{10pt}{4pt}
+\titlespacing*{\subsection}{0pt}{8pt}{3pt}
+\setlist{nosep,leftmargin=1.6em}
+\captionsetup[table]{position=top}
+\captionsetup[figure]{position=top}
+\newcommand{\fonte}[1]{\par\vspace{2pt}{\footnotesize Fonte: #1\par}}
+\newcommand{\fonteautores}{\fonte{elaborado pelos autores a partir do NWPU-RESISC45 (CHENG; HAN; LU, 2017).}}
+\renewcommand{\arraystretch}{1.08}
+
+\begin{document}
+
+\begin{center}
+{\large\bfseries CLASSIFICAÇÃO DE CENAS AÉREAS COM REDES NEURAIS: MLP, CNN E O EFEITO DA RESOLUÇÃO NO NWPU-RESISC45\par}
+\vspace{8pt}
+{\itshape Aerial scene classification with neural networks: MLP, CNN and the effect of resolution on NWPU-RESISC45\par}
+\vspace{10pt}
+Paulo Henrico Rabelo (matrícula 2312652)\footnote{Universidade de Fortaleza (Unifor), disciplina de Ciência de Dados.}\\
+Joey Alan (matrícula 2320416)\textsuperscript{1}\\[4pt]
+{\small Código, partições, métricas e figuras: \url{https://github.com/JoeyAlanS/redes-reurais-fotos-satelite}}
+\end{center}
+
+\vspace{4pt}
+\noindent\textbf{Resumo:} Este trabalho investiga como a arquitetura e a resolução das imagens afetam a classificação de cenas aéreas e quais ganhos justificam o custo computacional. Em um recorte de dez classes do NWPU-RESISC45 (7.000 imagens RGB de 256~×~256 pixels), comparamos duas redes perceptron multicamadas (MLP) e duas redes neurais convolucionais (CNN), todas treinadas a partir de pesos aleatórios, e treinamos as mesmas CNNs em 128~×~128 e 256~×~256 pixels, num total de seis treinamentos. A divisão estratificada 70/15/15 mantém duplicatas e quase-duplicatas na mesma partição, a seleção de checkpoints usa o F1 macro de validação e o teste é avaliado uma única vez. \pend{Resultados principais: F1 macro de teste das MLPs (\res{MLP-A-128/f1_macro_teste} e \res{MLP-B-128/f1_macro_teste}) versus CNNs em 128 px (\res{CNN-A-128/f1_macro_teste} e \res{CNN-B-128/f1_macro_teste}); efeito de 256 px (\res{CNN-A-256/f1_macro_teste} e \res{CNN-B-256/f1_macro_teste}) e do custo; classes mais confundidas.}
+
+\noindent\textbf{Palavras-chave:} Sensoriamento remoto. Classificação de cenas. Redes neurais convolucionais. Perceptron multicamadas. Resolução espacial.
+
+\vspace{3pt}
+\noindent\textbf{Abstract:} We study how architecture and input resolution affect aerial scene classification on a ten-class subset of NWPU-RESISC45. Two multilayer perceptrons and two convolutional networks are trained from scratch, and both CNNs are trained at 128 and 256 pixels (six runs). Duplicates are kept within a single split, checkpoints are selected by validation macro-F1 and the test set is evaluated once. \pend{Main findings.}
+
+\noindent\textbf{Keywords:} Remote sensing. Scene classification. Convolutional neural networks. Multilayer perceptron.
+
+\section{Introdução}
+
+A classificação de cenas aéreas atribui a uma imagem inteira um rótulo de uso ou cobertura do solo, como aeroporto, floresta ou porto. É uma etapa básica em mapeamento urbano, monitoramento ambiental e planejamento territorial. O NWPU-RESISC45 reúne 31.500 imagens de 45 classes extraídas do Google Earth, com resolução espacial entre cerca de 30 e 0,2~m por pixel, e foi proposto como referência justamente pela grande variação dentro de cada classe e pela semelhança entre classes (CHENG; HAN; LU, 2017).
+
+Uma MLP recebe a imagem como um vetor e não sabe que pixels vizinhos estão relacionados: cada neurônio da primeira camada tem um peso para cada pixel de cada canal. Uma CNN aplica os mesmos filtros pequenos em todas as posições, o que explora a estrutura local (bordas, texturas, formas) com muito menos parâmetros (LECUN \textit{et al.}, 1998; GOODFELLOW; BENGIO; COURVILLE, 2016). A resolução de entrada também tem dois lados: 256~×~256 preserva detalhes como tanques, casas e embarcações, mas quadruplica o número de pixels processados e, portanto, o custo das camadas convolucionais.
+
+O objetivo é responder, nas condições executadas: (i) como duas MLPs e duas CNNs se comportam em 128~×~128; (ii) como a resolução de 256~×~256 afeta cada CNN; (iii) se os ganhos compensam o custo de treino; e (iv) quais classes são confundidas e por quê. A Seção~2 descreve dados, preparação, arquiteturas e protocolo; a Seção~3 apresenta os resultados; a Seção~4 os discute; e a Seção~5 conclui.
+
+\section{Metodologia}
+
+\subsection{Dados}
+
+Usamos as dez classes definidas no enunciado, com 700 imagens RGB de 256~×~256 pixels cada (Tabela~\ref{tab:dados}). O arquivo foi obtido de uma cópia pública no Hugging Face, porque o link oficial do OneDrive respondeu HTTP 403; a integridade foi conferida por SHA-256. Os originais nunca são alterados, e a ordem das classes da Tabela~\ref{tab:dados} é a mesma em todo o código, nas métricas e nas matrizes.
+
+\begin{table}[H]
+\centering
+\caption{Classes, característica visual investigada e tamanho das partições}\label{tab:dados}
+\small
+\begin{tabularx}{\linewidth}{@{}llXrrr@{}}
+\toprule
+Pasta & Classe & Característica visual & Treino & Valid. & Teste\\
+\midrule
+airport & Aeroporto & Pistas extensas e organização das instalações & \res{part/airport/treino} & \res{part/airport/validacao} & \res{part/airport/teste}\\
+beach & Praia & Faixa de areia e transição água/terra & \res{part/beach/treino} & \res{part/beach/validacao} & \res{part/beach/teste}\\
+circular\_farmland & Agrícola circular & Geometria circular repetida & \res{part/circular_farmland/treino} & \res{part/circular_farmland/validacao} & \res{part/circular_farmland/teste}\\
+dense\_residential & Resid. densa & Concentração de construções & \res{part/dense_residential/treino} & \res{part/dense_residential/validacao} & \res{part/dense_residential/teste}\\
+desert & Deserto & Superfície arenosa, pouca vegetação & \res{part/desert/treino} & \res{part/desert/validacao} & \res{part/desert/teste}\\
+forest & Floresta & Cobertura vegetal e textura das copas & \res{part/forest/treino} & \res{part/forest/validacao} & \res{part/forest/teste}\\
+harbor & Porto & Água, embarcações e infraestrutura & \res{part/harbor/treino} & \res{part/harbor/validacao} & \res{part/harbor/teste}\\
+mountain & Montanha & Relevo, sombras, textura irregular & \res{part/mountain/treino} & \res{part/mountain/validacao} & \res{part/mountain/teste}\\
+river & Rio & Traçados alongados e sinuosos & \res{part/river/treino} & \res{part/river/validacao} & \res{part/river/teste}\\
+storage\_tank & Tanques & Estruturas circulares agrupadas & \res{part/storage_tank/treino} & \res{part/storage_tank/validacao} & \res{part/storage_tank/teste}\\
+\midrule
+\multicolumn{3}{@{}l}{Total (\res{total} imagens)} & \res{part/total/treino} & \res{part/total/validacao} & \res{part/total/teste}\\
+\bottomrule
+\end{tabularx}
+\fonteautores
+\end{table}
+
+\subsection{Integridade, duplicatas e partições}
+
+Todas as imagens foram abertas e verificadas: \res{problemas} apresentaram problema de leitura, dimensão diferente de 256~×~256 ou modo diferente de RGB, e nenhuma foi excluída. Para evitar vazamento entre partições, agrupamos (a) duplicatas exatas, pelo SHA-256 do arquivo, e (b) versões da mesma cena, por um \textit{hash} perceptual de diferenças (dHash) de 256 bits (KRAWETZ, 2013) comparado nas oito orientações obtidas por rotações de 90° e espelhamentos. Pares com distância de Hamming de até \res{dup/limiar} bits foram ligados. Encontramos \res{dup/exatas} duplicatas exatas, todas em \textit{airport}, e \res{dup/quase} quase-duplicatas: \textit{mountain\_111}/\textit{mountain\_324}, a mesma imagem recodificada, e \textit{dense\_residential\_175}/\textit{dense\_residential\_638}, a mesma cena levemente deslocada. Fora esses pares, a distância de cada imagem à vizinha mais próxima foi de 35 bits ou mais, o que dá margem ao limiar escolhido.
+
+A divisão é 70/15/15, estratificada por classe, com semente 42 e caminhos ordenados antes do sorteio. Cada grupo de duplicatas é sorteado como unidade, por isso \textit{airport} ficou com 491/104/105 imagens em vez de 490/105/105. Arquivo, classe, grupo e partição estão salvos em \nolinkurl{dados/splits/particoes.csv} e são reutilizados em todos os experimentos. A exploração visual usou apenas o treino; validação e teste foram inspecionados só quanto a integridade, contagens e sobreposição.
+
+\subsection{Análise exploratória}
+
+A Figura~\ref{fig:exemplos} mostra exemplos do treino. Para localizar ambiguidades de forma objetiva, descrevemos cada imagem de treino por histogramas de cor, contraste e gradiente médio e a atribuímos ao centróide de classe mais próximo. Floresta (89\% atribuídas à própria classe) e deserto (76\%) são bem separadas por esses atributos globais, enquanto montanha (14\%) se mistura com rio (27\%), agrícola circular (19\%) e aeroporto (14\%), e aeroporto se confunde com rio (22\%). A distinção dessas classes depende, portanto, de forma e organização espacial, e não só de cor ou textura média, o que motiva a comparação entre MLP e CNN.
+
+\begin{figure}[H]
+\centering
+\caption{Exemplos do conjunto de treino e a mesma imagem em 256~×~256 e 128~×~128}\label{fig:exemplos}
+\figuraarq{0.55\linewidth}{7.2cm}{eda_exemplos.png}{notebooks/01\_exploracao.ipynb}\hfill
+\figuraarq{0.41\linewidth}{7.2cm}{eda_resolucao.png}{notebooks/01\_exploracao.ipynb}
+\fonteautores
+\end{figure}
+
+\subsection{Pré-processamento}
+
+Cada imagem é decodificada em RGB, redimensionada a partir do original para 128 ou 256 pixels (interpolação bilinear com \textit{antialias}) e dividida por 255. Essa normalização não aprende estatística alguma, então não há como vazar informação de validação ou teste. O aumento de dados, aplicado só no treino e igual para os seis modelos, consiste em espelhamentos horizontal e vertical e rotações de 90° aleatórios: cenas vistas de cima não têm orientação canônica, então essas transformações preservam a classe.
+
+\subsection{Arquiteturas}
+
+A Tabela~\ref{tab:arq} resume as quatro arquiteturas. As MLPs usam normalização em lote (\textit{batch normalization}) (IOFFE; SZEGEDY, 2015) e \textit{dropout} de 0,3 (SRIVASTAVA \textit{et al.}, 2014) nas camadas ocultas. A MLP~B tem praticamente o mesmo número de parâmetros da A, já que 99,7\% deles estão na primeira camada densa; a comparação isola, assim, o efeito da \textbf{profundidade}. As CNNs empilham blocos Conv 3~×~3 → normalização em lote → ReLU → MaxPooling 2~×~2 e terminam com agregação média global (\textit{GlobalAveragePooling2D}) (LIN; CHEN; YAN, 2014). Por isso filtros, \textit{kernels}, blocos e cabeça, e portanto os parâmetros, são idênticos em 128 e 256 pixels. A CNN~B acrescenta um quarto bloco e uma camada densa, o que amplia o campo receptivo de 22 para 46 pixels. Em 256 pixels, o campo receptivo da CNN~A cobre só 8,6\% do lado da imagem (contra 17\% em 128), e por isso esperamos que a CNN~B se beneficie mais da resolução maior.
+
+A normalização em lote usa \textit{momentum} 0,9 em vez do padrão do Keras (0,99). Num teste de duas épocas com o padrão, a variância móvel da primeira camada ainda refletia o valor inicial (0,048, contra 0,003 medido nos lotes), e a validação colapsava numa única classe (11\% de acurácia, contra 66\% no treino). Com 0,9, as estatísticas de inferência acompanham as de treino desde a primeira época.
+
+\begin{table}[H]
+\centering
+\caption{Arquiteturas, parâmetros e hipótese de cada comparação}\label{tab:arq}
+\small
+\begin{tabularx}{\linewidth}{@{}lp{6.1cm}rX@{}}
+\toprule
+Modelo & Estrutura & Parâmetros & Hipótese\\
+\midrule
+MLP A & vetor 49.152 → Dense 256 → Dense 10 & 12.586.506 & referência sem viés espacial\\
+MLP B & vetor 49.152 → Dense 256 → 128 → 64 → Dense 10 & 12.626.314 & profundidade com o mesmo orçamento\\
+CNN A & 3 blocos (32/64/128 filtros) → GAP → Dense 10 & 95.210 & padrões locais com 132 vezes menos parâmetros\\
+CNN B & 4 blocos (32/64/128/256) → GAP → Dense 128 → Dense 10 & 424.042 & campo receptivo e capacidade maiores\\
+\bottomrule
+\end{tabularx}
+\fonteautores
+\end{table}
+
+\subsection{Protocolo de treinamento e avaliação}
+
+Os seis treinamentos (MLP-A-128, MLP-B-128, CNN-A-128, CNN-B-128, CNN-A-256 e CNN-B-256) partem de pesos novos, sem pré-treinamento, em TensorFlow/Keras (ABADI \textit{et al.}, 2016; CHOLLET \textit{et al.}, 2015). Usam entropia cruzada categórica, otimizador Adam com taxa 0,001 (KINGMA; BA, 2015), lote de 32 imagens, semente 42 e no máximo 40 épocas. Ao fim de cada época, calculamos o F1 macro da validação. O checkpoint salvo é o da época de maior F1, e o treino para após 8 épocas sem melhora. Para isolar o efeito da resolução, cada CNN mantém pré-processamento, semente, otimizador, taxa, lote e política de parada nas duas resoluções. O hardware foi \pend{GPU/CPU utilizada}.
+
+O tempo é medido com \texttt{time.perf\_counter} em volta do treinamento, incluindo a leitura das imagens e a validação de cada época e excluindo o download e a preparação das partições. Só depois de encerrar todas as escolhas avaliamos os seis modelos salvos, uma única vez, no mesmo teste. Reportamos acurácia, F1 macro e precisão, recall, F1 e suporte por classe (PEDREGOSA \textit{et al.}, 2011). Quando uma classe nunca é prevista, sua precisão é 0/0; adotamos o valor zero (\texttt{zero\_division=0}) e listamos essas classes nas tabelas do repositório.
+
+\section{Resultados}
+
+A Tabela~\ref{tab:resultados} reúne desempenho e custo. As métricas detalhadas por classe estão em \nolinkurl{resultados/metricas/} e no notebook \nolinkurl{notebooks/02_resultados.ipynb}.
+
+\begin{table}[H]
+\centering
+\caption{Desempenho (validação e teste) e custo dos seis treinamentos}\label{tab:resultados}
+\footnotesize
+\setlength{\tabcolsep}{3.2pt}
+\begin{tabular}{@{}lrrrrrrrr@{}}
+\toprule
+& \multicolumn{1}{c}{Valid.} & \multicolumn{2}{c}{Teste} & \multicolumn{5}{c}{Custo}\\
+\cmidrule(lr){2-2}\cmidrule(lr){3-4}\cmidrule(l){5-9}
+Modelo & F1 mac. & Acur. & F1 mac. & Parâm. & MB & Épocas (ckpt) & Min & s/época\\
+\midrule
+MLP-A-128 & \res{MLP-A-128/f1_macro_validacao} & \res{MLP-A-128/acuracia_teste} & \res{MLP-A-128/f1_macro_teste} & 12,59 M & \res{MLP-A-128/tamanho_modelo_mb} & \res{MLP-A-128/epocas_executadas} (\res{MLP-A-128/checkpoint_epoca}) & \res{MLP-A-128/tempo_total_min} & \res{MLP-A-128/tempo_medio_epoca_s}\\
+MLP-B-128 & \res{MLP-B-128/f1_macro_validacao} & \res{MLP-B-128/acuracia_teste} & \res{MLP-B-128/f1_macro_teste} & 12,63 M & \res{MLP-B-128/tamanho_modelo_mb} & \res{MLP-B-128/epocas_executadas} (\res{MLP-B-128/checkpoint_epoca}) & \res{MLP-B-128/tempo_total_min} & \res{MLP-B-128/tempo_medio_epoca_s}\\
+CNN-A-128 & \res{CNN-A-128/f1_macro_validacao} & \res{CNN-A-128/acuracia_teste} & \res{CNN-A-128/f1_macro_teste} & 95,2 mil & \res{CNN-A-128/tamanho_modelo_mb} & \res{CNN-A-128/epocas_executadas} (\res{CNN-A-128/checkpoint_epoca}) & \res{CNN-A-128/tempo_total_min} & \res{CNN-A-128/tempo_medio_epoca_s}\\
+CNN-B-128 & \res{CNN-B-128/f1_macro_validacao} & \res{CNN-B-128/acuracia_teste} & \res{CNN-B-128/f1_macro_teste} & 424,0 mil & \res{CNN-B-128/tamanho_modelo_mb} & \res{CNN-B-128/epocas_executadas} (\res{CNN-B-128/checkpoint_epoca}) & \res{CNN-B-128/tempo_total_min} & \res{CNN-B-128/tempo_medio_epoca_s}\\
+CNN-A-256 & \res{CNN-A-256/f1_macro_validacao} & \res{CNN-A-256/acuracia_teste} & \res{CNN-A-256/f1_macro_teste} & 95,2 mil & \res{CNN-A-256/tamanho_modelo_mb} & \res{CNN-A-256/epocas_executadas} (\res{CNN-A-256/checkpoint_epoca}) & \res{CNN-A-256/tempo_total_min} & \res{CNN-A-256/tempo_medio_epoca_s}\\
+CNN-B-256 & \res{CNN-B-256/f1_macro_validacao} & \res{CNN-B-256/acuracia_teste} & \res{CNN-B-256/f1_macro_teste} & 424,0 mil & \res{CNN-B-256/tamanho_modelo_mb} & \res{CNN-B-256/epocas_executadas} (\res{CNN-B-256/checkpoint_epoca}) & \res{CNN-B-256/tempo_total_min} & \res{CNN-B-256/tempo_medio_epoca_s}\\
+\bottomrule
+\end{tabular}
+\fonte{elaborado pelos autores. Lote de 32 imagens; hardware: \pend{GPU/CPU}.}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\caption{Perda de treino e validação por época (linha pontilhada: checkpoint escolhido pelo F1 macro de validação)}\label{fig:curvas}
+\figuraarq{0.9\linewidth}{6.6cm}{painel_curvas_perda.png}{scripts/avaliar.py}
+\fonteautores
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\caption{Matrizes de confusão no teste, normalizadas por classe real (reais nas linhas, previstas nas colunas)}\label{fig:confusao}
+\figuraarq{0.95\linewidth}{10cm}{painel_confusao_teste.png}{scripts/avaliar.py}
+\fonteautores
+\end{figure}
+
+\pend{Descrever os números da Tabela~\ref{tab:resultados}: diferença MLP × CNN em 128 px; variação de cada CNN de 128 para 256 px; razão de tempo por época entre 256 e 128 px. Citar as contagens das matrizes completas (\texttt{resultados/\allowbreak figuras/\allowbreak confusao\_*\_teste.png}) para os pares mais confundidos.}
+
+\begin{figure}[H]
+\centering
+\caption{Erros de teste de maior confiança do modelo de maior F1 macro de validação (\res{sel/modelo_erros})}\label{fig:erros}
+\figuraarq{\linewidth}{4.2cm}{erros_teste.png}{scripts/avaliar.py, após prever.py -{}-teste}
+\fonteautores
+\end{figure}
+
+\section{Discussão}
+
+\textbf{MLP × CNN em 128~×~128.} \pend{Comparar MLP~A e MLP~B (a profundidade ajudou com o mesmo orçamento de parâmetros?) e as CNNs (\res{CNN-A-128/f1_macro_teste} e \res{CNN-B-128/f1_macro_teste}) com as MLPs.} Como as MLPs têm cerca de 132 vezes mais parâmetros que a CNN~A, qualquer vantagem das CNNs vem do viés indutivo da convolução, que compartilha pesos e é invariante a translação, e não da capacidade.
+
+\textbf{Efeito da resolução.} \pend{Variação do F1 macro de teste: CNN~A de \res{CNN-A-128/f1_macro_teste} para \res{CNN-A-256/f1_macro_teste}; CNN~B de \res{CNN-B-128/f1_macro_teste} para \res{CNN-B-256/f1_macro_teste}. Verificar a hipótese do campo receptivo: a CNN~B ganhou mais que a A? Quais classes mais se beneficiaram (tanques, residencial densa, porto, que dependem de objetos pequenos)?}
+
+\textbf{Custo-benefício.} \pend{O tempo por época passou de \res{CNN-A-128/tempo_medio_epoca_s} para \res{CNN-A-256/tempo_medio_epoca_s}~s (CNN~A) e de \res{CNN-B-128/tempo_medio_epoca_s} para \res{CNN-B-256/tempo_medio_epoca_s}~s (CNN~B). O ganho de F1 compensa? O tamanho do modelo não muda com a resolução; o custo está na computação e na memória de ativações.}
+
+\textbf{Confusões e aspectos visuais.} \pend{Pares mais confundidos nas matrizes e relação com a análise exploratória (montanha × rio/floresta/deserto; aeroporto × residencial densa/tanques; praia × rio/porto). Comentar os erros da Figura~\ref{fig:erros}.}
+
+\textbf{Subajuste e sobreajuste.} \pend{Pelas curvas (Figura~\ref{fig:curvas}): distância entre perdas de treino e validação, época do checkpoint e comportamento após ele.}
+
+\textbf{Limites de generalização.} Cada configuração foi treinada uma única vez, com uma semente, então diferenças pequenas entre modelos podem estar dentro da variação aleatória entre execuções e não demonstram superioridade geral. O RESISC45 vem do Google Earth, com resolução espacial variável e regiões, estações e sensores misturados em todas as partições. Assim, o teste mede o desempenho em imagens da mesma distribuição, não em regiões, sensores ou épocas novas. O \textit{hash} perceptual detecta cópias e pequenas variações, mas não cenas vizinhas sobrepostas parcialmente, que podem tornar o teste otimista. Por fim, a resolução foi alterada por reamostragem da mesma imagem; uma imagem nativamente mais grosseira, capturada por outro sensor, tem ruído e borramento diferentes.
+
+\section{Conclusão}
+
+\pend{Responder em 4 a 6 frases às quatro perguntas da introdução, com os números principais, e indicar trabalhos futuros, como repetir os treinos com várias sementes, usar pesos pré-treinados (bônus YOLO) e validar em outra base, como a AID.}
+
+\section*{Referências}
+{\small\setlength{\parindent}{0pt}\setlength{\parskip}{6pt}\raggedright
+ABADI, M. \textit{et al.} TensorFlow: a system for large-scale machine learning. \textit{In}: USENIX SYMPOSIUM ON OPERATING SYSTEMS DESIGN AND IMPLEMENTATION, 12., 2016, Savannah. \textbf{Proceedings} [...]. Berkeley: USENIX Association, 2016. p. 265-283.
+
+CHENG, G.; HAN, J.; LU, X. Remote sensing image scene classification: benchmark and state of the art. \textbf{Proceedings of the IEEE}, v. 105, n. 10, p. 1865-1883, 2017. DOI: 10.1109/JPROC.2017.2675998.
+
+CHOLLET, F. \textit{et al.} \textbf{Keras}. 2015. Disponível em: \url{https://keras.io}. Acesso em: 25 nov. 2026.
+
+GOODFELLOW, I.; BENGIO, Y.; COURVILLE, A. \textbf{Deep learning}. Cambridge: MIT Press, 2016.
+
+IOFFE, S.; SZEGEDY, C. Batch normalization: accelerating deep network training by reducing internal covariate shift. \textit{In}: INTERNATIONAL CONFERENCE ON MACHINE LEARNING, 32., 2015, Lille. \textbf{Proceedings} [...]. [S. l.]: PMLR, 2015. p. 448-456.
+
+KINGMA, D. P.; BA, J. Adam: a method for stochastic optimization. \textit{In}: INTERNATIONAL CONFERENCE ON LEARNING REPRESENTATIONS, 3., 2015, San Diego. \textbf{Proceedings} [...]. [S. l.: s. n.], 2015.
+
+KRAWETZ, N. Kind of like that. \textbf{The Hacker Factor Blog}, 2013. Disponível em: \url{https://www.hackerfactor.com/blog/index.php?/archives/529-Kind-of-Like-That.html}. Acesso em: 25 nov. 2026.
+
+LECUN, Y. \textit{et al.} Gradient-based learning applied to document recognition. \textbf{Proceedings of the IEEE}, v. 86, n. 11, p. 2278-2324, 1998.
+
+LIN, M.; CHEN, Q.; YAN, S. Network in network. \textit{In}: INTERNATIONAL CONFERENCE ON LEARNING REPRESENTATIONS, 2., 2014, Banff. \textbf{Proceedings} [...]. [S. l.: s. n.], 2014.
+
+PEDREGOSA, F. \textit{et al.} Scikit-learn: machine learning in Python. \textbf{Journal of Machine Learning Research}, v. 12, p. 2825-2830, 2011.
+
+SRIVASTAVA, N. \textit{et al.} Dropout: a simple way to prevent neural networks from overfitting. \textbf{Journal of Machine Learning Research}, v. 15, p. 1929-1958, 2014.\par}
+
+\end{document}

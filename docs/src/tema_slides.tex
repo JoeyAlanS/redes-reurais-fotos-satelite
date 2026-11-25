@@ -1,0 +1,62 @@
+% Tema comum dos slides (acompanhamento e pitch).
+\usepackage{fontspec}
+\setsansfont{Noto Sans}
+\setmonofont[Scale=0.85]{Liberation Mono}
+\usepackage[none]{hyphenat}
+\usepackage{booktabs,tabularx,multirow,array,graphicx,xcolor}
+\usepackage{tikz}
+\usepackage{newunicodechar}
+% Noto Sans não tem estes símbolos; usa a versão matemática.
+\newunicodechar{→}{\ensuremath{\rightarrow}}
+\newunicodechar{≈}{\ensuremath{\approx}}
+\newunicodechar{≥}{\ensuremath{\geq}}
+\newunicodechar{×}{\ensuremath{\times}}
+\newunicodechar{↔}{\ensuremath{\leftrightarrow}}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+\input{macros}
+
+\renewcommand{\figurename}{Figura}
+\renewcommand{\tablename}{Tabela}
+
+\setbeamersize{text margin left=9mm,text margin right=9mm}
+\setbeamertemplate{navigation symbols}{}
+\setbeamercolor{normal text}{fg=black!85}
+\setbeamercolor{structure}{fg=azul}
+\setbeamercolor{alerted text}{fg=azulclaro}
+\setbeamerfont{frametitle}{size=\Large,series=\bfseries}
+\setbeamertemplate{itemize item}{\color{azulclaro}\raisebox{1.5pt}{\rule{4pt}{4pt}}}
+\setbeamertemplate{itemize subitem}{\color{cinza}--}
+\setbeamertemplate{enumerate item}{\color{azulclaro}\bfseries\insertenumlabel.}
+\setlength{\leftmargini}{1.3em}
+
+% Quem apresenta cada slide (participação equilibrada).
+\newcommand{\falante}{}
+\newcommand{\fala}[1]{\renewcommand{\falante}{#1}}
+
+\setbeamertemplate{frametitle}{%
+  \vskip6mm
+  \begin{beamercolorbox}[wd=\paperwidth,leftskip=9mm,rightskip=9mm]{frametitle}
+    \usebeamerfont{frametitle}\color{azul}\insertframetitle
+    \ifx\falante\empty\else\hfill{\normalsize\mdseries\color{cinza}\falante}\fi
+  \end{beamercolorbox}
+  \vskip-1mm{\color{azulclaro}\hspace*{9mm}\rule{18mm}{1.6pt}}\vskip2mm}
+
+\setbeamertemplate{footline}{%
+  \hbox to\paperwidth{\hspace*{9mm}\color{cinza}\tiny Projeto 3 \textperiodcentered{} Classificação de Cenas Aéreas \textperiodcentered{} \tipodoc\hfill\insertframenumber\hspace*{9mm}}\vskip3mm}
+
+\setbeamertemplate{title page}{%
+  \vfill
+  {\color{azulclaro}\small\bfseries CIÊNCIA DE DADOS \textperiodcentered{} UNIDADE III \textperiodcentered{} UNIFOR\par}
+  \vskip3mm
+  {\color{azul}\fontsize{26}{30}\selectfont\bfseries\inserttitle\par}
+  \vskip2mm
+  {\color{azulclaro}\large\insertsubtitle\par}
+  \vskip3mm{\color{azulclaro}\rule{25mm}{2pt}}\vskip5mm
+  {\normalsize\insertauthor\par}
+  \vskip2mm
+  {\small\color{cinza}\insertdate\par}
+  \vfill}
+
+\newcommand{\repo}{\href{https://github.com/JoeyAlanS/redes-reurais-fotos-satelite}{github.com/JoeyAlanS/redes-reurais-fotos-satelite}}
+% Caixa de destaque
+\newcommand{\destaque}[1]{\colorbox{azul!7}{\parbox{\dimexpr\linewidth-2\fboxsep}{\raggedright\small #1}}}

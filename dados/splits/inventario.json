@@ -1,17 +1,22 @@
 {
-  "origem": "/home/joey/Documentos/GitHub/redes-reurais-fotos-satelite/dados/raw/NWPU-RESISC45",
+  "origem": "dados/raw/NWPU-RESISC45",
   "semente": 42,
+  "proporcoes": {
+    "treino": 0.7,
+    "validacao": 0.15,
+    "teste": 0.15
+  },
   "total": 7000,
   "contagens": {
     "airport": {
-      "validacao": 104,
       "treino": 491,
+      "validacao": 104,
       "teste": 105
     },
     "beach": {
       "treino": 490,
-      "teste": 105,
-      "validacao": 105
+      "validacao": 105,
+      "teste": 105
     },
     "circular_farmland": {
       "treino": 490,
@@ -40,13 +45,13 @@
     },
     "mountain": {
       "treino": 490,
-      "teste": 105,
-      "validacao": 105
+      "validacao": 105,
+      "teste": 105
     },
     "river": {
       "treino": 490,
-      "teste": 105,
-      "validacao": 105
+      "validacao": 105,
+      "teste": 105
     },
     "storage_tank": {
       "treino": 490,
@@ -54,7 +59,54 @@
       "teste": 105
     }
   },
+  "contagens_particao": {
+    "validacao": 1049,
+    "treino": 4901,
+    "teste": 1050
+  },
+  "dimensoes": {
+    "256x256": 7000
+  },
+  "modos_cor": {
+    "RGB": 7000
+  },
   "duplicatas_exatas": 6,
+  "grupos_exatos": [
+    [
+      "dados/raw/NWPU-RESISC45/airport/airport_050.jpg",
+      "dados/raw/NWPU-RESISC45/airport/airport_420.jpg"
+    ],
+    [
+      "dados/raw/NWPU-RESISC45/airport/airport_064.jpg",
+      "dados/raw/NWPU-RESISC45/airport/airport_527.jpg"
+    ],
+    [
+      "dados/raw/NWPU-RESISC45/airport/airport_118.jpg",
+      "dados/raw/NWPU-RESISC45/airport/airport_315.jpg"
+    ],
+    [
+      "dados/raw/NWPU-RESISC45/airport/airport_243.jpg",
+      "dados/raw/NWPU-RESISC45/airport/airport_397.jpg"
+    ],
+    [
+      "dados/raw/NWPU-RESISC45/airport/airport_289.jpg",
+      "dados/raw/NWPU-RESISC45/airport/airport_635.jpg"
+    ],
+    [
+      "dados/raw/NWPU-RESISC45/airport/airport_361.jpg",
+      "dados/raw/NWPU-RESISC45/airport/airport_509.jpg"
+    ]
+  ],
+  "quase_duplicatas": {
+    "metodo": "dHash 256 bits (17x17 em cinza), mínimo nas 8 orientações, distância de Hamming",
+    "limiar": 12,
+    "pares": 8,
+    "grupos_com_mais_de_um_arquivo": 8,
+    "imagens_em_grupos": 16,
+    "maior_grupo": 2,
+    "grupos_entre_classes": []
+  },
+  "exclusoes": [],
   "problemas": [],
-  "observacao": "Hashes detectam duplicatas exatas; versões visualmente semelhantes exigem revisão manual antes do treino."
+  "regra": "Grupos de duplicatas exatas e quase-duplicatas são sorteados como unidade, com semente 42, após ordenar os caminhos; as proporções por classe podem variar em poucas imagens."
 }

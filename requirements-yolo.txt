@@ -1,0 +1,5 @@
+# Ambiente separado (.venv-yolo) para o bônus; evita conflito de CUDA entre PyTorch e TensorFlow
+ultralytics>=8.3,<9
+scikit-learn>=1.5,<2
+pandas>=2.2,<4
+python-dotenv>=1,<2

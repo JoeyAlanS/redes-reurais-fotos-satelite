@@ -1,10 +1,15 @@
 .venv/
+.venv-yolo/
 __pycache__/
 *.py[cod]
 .env
 .ipynb_checkpoints/
 .pytest_cache/
 dados/raw/
+dados/yolo/
 modelos/*.keras
-resultados/historicos/
-resultados/figuras/*.png
+modelos/yolo/**/weights/
+*.pt
+*.rar
+*.part
+docs/src/build/

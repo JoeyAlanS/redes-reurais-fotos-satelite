@@ -1,0 +1,248 @@
+% Slides do acompanhamento — sem nenhuma métrica de teste, conforme o enunciado.
+\documentclass[aspectratio=169,10pt,t]{beamer}
+\newcommand{\tipodoc}{Acompanhamento}
+\input{tema_slides}
+
+\title{Classificação de Cenas Aéreas com Redes Neurais}
+\subtitle{Acompanhamento \textperiodcentered{} dados, preparação, arquiteturas e primeiros resultados de validação}
+\author{Paulo Henrico Rabelo (2312652) \quad Joey Alan (2320416)}
+\date{Projeto 3 \textperiodcentered{} NWPU-RESISC45 \textperiodcentered{} \repo}
+
+\begin{document}
+
+\begin{frame}[plain]
+\titlepage
+\end{frame}
+
+\fala{Paulo}
+\begin{frame}{Problema e perguntas}
+\begin{columns}[T]
+\begin{column}{0.55\textwidth}
+\textbf{Desafio:} como a arquitetura e a resolução afetam a classificação de cenas aéreas, e quais ganhos justificam o custo?
+\vskip4mm
+\begin{enumerate}
+\item MLP A/B × CNN A/B em 128\,×\,128
+\item Efeito de 256\,×\,256 em cada CNN
+\item O ganho compensa o custo?
+\item Quais classes se confundem, e por quê?
+\end{enumerate}
+\end{column}
+\begin{column}{0.4\textwidth}
+\destaque{\textbf{6 treinamentos}, todos com pesos novos:\\[2pt]
+MLP-A-128 \quad MLP-B-128\\
+CNN-A-128 \quad CNN-B-128\\
+CNN-A-256 \quad CNN-B-256}
+\vskip3mm
+\destaque{Seleção pelo \textbf{F1 macro de validação}. O teste só é avaliado no fim, uma única vez.}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Dados filtrados: 10 classes do NWPU-RESISC45}
+\begin{columns}[T]
+\begin{column}{0.42\textwidth}
+\begin{itemize}
+\item \res{total} imagens RGB 256\,×\,256, 700 por classe
+\item Cópia pública no Hugging Face (o OneDrive deu HTTP 403), conferida por SHA-256
+\item Todas abertas e verificadas: \textbf{\res{problemas}} problemas de leitura, dimensão ou canal
+\item Ordem fixa das classes em código, métricas e matrizes
+\item Originais nunca alterados
+\end{itemize}
+\end{column}
+\begin{column}{0.55\textwidth}
+\centering\figuraarq{\linewidth}{5.2cm}{eda_exemplos.png}{notebooks/01\_exploracao.ipynb}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Duplicatas e prevenção de vazamento}
+\begin{columns}[T]
+\begin{column}{0.44\textwidth}
+\begin{itemize}
+\item \textbf{Exatas} (SHA-256): \res{dup/exatas} pares, todos em \textit{airport}
+\item \textbf{Quase-duplicatas}: dHash de 256 bits nas 8 orientações, limiar de \res{dup/limiar} bits
+\begin{itemize}
+\item \textit{mountain} 111/324: mesma imagem recodificada
+\item \textit{dense\_residential} 175/638: cena deslocada
+\end{itemize}
+\item Demais imagens: vizinha mais próxima a \textbf{≥ 35 bits}
+\item Cada grupo é sorteado como \textbf{uma unidade}
+\end{itemize}
+\end{column}
+\begin{column}{0.53\textwidth}
+\centering\figuraarq{\linewidth}{5.2cm}{eda_duplicatas.png}{notebooks/01\_exploracao.ipynb}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Partições: 70/15/15, estratificadas, semente 42}
+\begin{columns}[T]
+\begin{column}{0.4\textwidth}
+\centering
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+& Treino & Valid. & Teste\\
+\midrule
+Por classe & 490 & 105 & 105\\
+\textit{airport} & \res{part/airport/treino} & \res{part/airport/validacao} & \res{part/airport/teste}\\
+\midrule
+\textbf{Total} & \textbf{\res{part/total/treino}} & \textbf{\res{part/total/validacao}} & \textbf{\res{part/total/teste}}\\
+\bottomrule
+\end{tabular}
+\vskip4mm
+\begin{itemize}\small
+\item Caminhos ordenados antes do sorteio
+\item \texttt{particoes.csv} reutilizado em tudo, inclusive no bônus
+\item Exploração visual só no treino
+\end{itemize}
+\end{column}
+\begin{column}{0.56\textwidth}
+\centering\figuraarq{\linewidth}{5.4cm}{eda_contagens.png}{notebooks/01\_exploracao.ipynb}
+\end{column}
+\end{columns}
+\end{frame}
+
+\fala{Joey}
+\begin{frame}{Exploração: onde cor e textura não bastam}
+\begin{columns}[T]
+\begin{column}{0.44\textwidth}
+Centróide mais próximo em cor e textura, só no treino:
+\begin{itemize}
+\item Floresta \textbf{89\%} e deserto \textbf{76\%}: bem separados
+\item Montanha \textbf{14\%}: vai para rio (27\%), agrícola circular (19\%) e aeroporto (14\%)
+\item Aeroporto se confunde com rio (22\%)
+\end{itemize}
+\vskip2mm
+\destaque{Hipótese: essas classes exigem \textbf{forma e organização espacial}, o que favorece a CNN.}
+\end{column}
+\begin{column}{0.53\textwidth}
+\centering\figuraarq{0.9\linewidth}{5.2cm}{eda_confusao_centroides.png}{notebooks/01\_exploracao.ipynb}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Mesma imagem em 256\,×\,256 e 128\,×\,128}
+\begin{columns}[T]
+\begin{column}{0.36\textwidth}
+\begin{itemize}
+\item Redimensionada \textbf{a partir do original} (bilinear com \textit{antialias}), pixels ÷ 255
+\item Em 128 px cada pixel junta 2\,×\,2 do original
+\item Tanques, casas e barcos perdem contorno
+\item 256 px custa \textbf{4×} mais pixels por camada convolucional
+\end{itemize}
+\end{column}
+\begin{column}{0.6\textwidth}
+\centering\figuraarq{\linewidth}{5.2cm}{eda_resolucao.png}{notebooks/01\_exploracao.ipynb}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Arquiteturas e hipóteses}
+\small
+\begin{tabularx}{\linewidth}{@{}lLrL@{}}
+\toprule
+Modelo & Estrutura & Parâmetros & Hipótese\\
+\midrule
+MLP A & 49.152 → Dense 256 → 10 & 12.586.506 & referência sem viés espacial\\
+MLP B & 49.152 → 256 → 128 → 64 → 10 & 12.626.314 & mesma ordem de parâmetros: isola a \textbf{profundidade}\\
+CNN A & 3 blocos Conv-BN-ReLU-Pool (32/64/128) → GAP → 10 & 95.210 & padrões locais com 132× menos parâmetros\\
+CNN B & 4 blocos (32/64/128/256) → GAP → Dense 128 → 10 & 424.042 & campo receptivo de 22 → 46 px\\
+\bottomrule
+\end{tabularx}
+\vskip4mm
+\begin{itemize}
+\item GAP: os parâmetros das CNNs são \textbf{idênticos} em 128 e 256 px, e nenhum peso é reaproveitado entre resoluções
+\item Em 256 px, o campo receptivo da CNN A cobre só 8,6\% do lado da cena; espera-se que a B ganhe mais
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Protocolo de treinamento}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\begin{itemize}
+\item TensorFlow/Keras, pesos novos, semente 42
+\item Entropia cruzada, Adam (0,001), lote 32
+\item Até 40 épocas; para após \textbf{8 sem melhora}
+\item Checkpoint = época de maior \textbf{F1 macro de validação}
+\item Aumento só no treino: espelhamentos e giros de 90°
+\end{itemize}
+\end{column}
+\begin{column}{0.46\textwidth}
+\destaque{\textbf{Isolar a resolução:} em cada CNN, mesmo pré-processamento, semente, otimizador, taxa, lote e parada nas duas resoluções.}
+\vskip3mm
+\destaque{Cada treino registra tempo total e por época, tamanho, hardware e versões das bibliotecas (\texttt{modelos/*.json}).}
+\end{column}
+\end{columns}
+\end{frame}
+
+\fala{Paulo}
+\begin{frame}{Problema encontrado e corrigido}
+\begin{columns}[T]
+\begin{column}{0.52\textwidth}
+Num teste de 2 épocas com o \textit{BatchNorm} padrão do Keras:
+\begin{itemize}
+\item Treino: \textbf{66\%} de acurácia; validação: \textbf{11\%}, com quase tudo previsto como uma classe só
+\item Variância móvel da 1ª camada: 0,048; real nos lotes: 0,003
+\item Causa: com \textit{momentum} 0,99, a média móvel ainda guardava o valor inicial 1 (0,99\textsuperscript{306} ≈ 0,05)
+\end{itemize}
+\end{column}
+\begin{column}{0.44\textwidth}
+\destaque{\textbf{Correção:} \textit{momentum} 0,9. As estatísticas de inferência convergem na 1ª época.}
+\vskip3mm
+\destaque{Mesmo teste após a correção: validação de 41\% na 1ª época e 67\% na 2ª (só para verificar, não é resultado final).}
+\end{column}
+\end{columns}
+\end{frame}
+
+\fala{Paulo e Joey}
+\begin{frame}{Resultados de validação (teste não avaliado)}
+\begin{columns}[T]
+\begin{column}{0.42\textwidth}
+\centering\small
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Modelo & Acur. & F1 macro & Época\\
+\midrule
+MLP-A-128 & \res{MLP-A-128/acuracia_validacao} & \res{MLP-A-128/f1_macro_validacao} & \res{MLP-A-128/checkpoint_epoca}\\
+MLP-B-128 & \res{MLP-B-128/acuracia_validacao} & \res{MLP-B-128/f1_macro_validacao} & \res{MLP-B-128/checkpoint_epoca}\\
+CNN-A-128 & \res{CNN-A-128/acuracia_validacao} & \res{CNN-A-128/f1_macro_validacao} & \res{CNN-A-128/checkpoint_epoca}\\
+CNN-B-128 & \res{CNN-B-128/acuracia_validacao} & \res{CNN-B-128/f1_macro_validacao} & \res{CNN-B-128/checkpoint_epoca}\\
+CNN-A-256 & \res{CNN-A-256/acuracia_validacao} & \res{CNN-A-256/f1_macro_validacao} & \res{CNN-A-256/checkpoint_epoca}\\
+CNN-B-256 & \res{CNN-B-256/acuracia_validacao} & \res{CNN-B-256/f1_macro_validacao} & \res{CNN-B-256/checkpoint_epoca}\\
+\bottomrule
+\end{tabular}
+\vskip3mm
+\raggedright\footnotesize Mínimo exigido: uma MLP e uma CNN. Tempo por época: \pend{preencher}.
+\end{column}
+\begin{column}{0.55\textwidth}
+\centering\figuraarq{\linewidth}{5.2cm}{painel_curvas_perda.png}{scripts/prever.py e scripts/avaliar.py (só validação)}
+\end{column}
+\end{columns}
+\end{frame}
+
+\fala{Joey}
+\begin{frame}{Próximos passos}
+\begin{enumerate}
+\item Concluir os seis treinamentos no mesmo hardware (GPU) e salvar checkpoints e históricos
+\item Comparar pela validação e fechar as escolhas, sem olhar o teste
+\item Avaliar os seis modelos salvos no teste, uma única vez: métricas por classe, matrizes, custo e erros
+\item Discutir as confusões à luz da exploração (montanha, rio, aeroporto)
+\item Escrever o artigo (até 10 páginas, ABNT) e preparar o pitch
+\item Bônus opcional: YOLO \textit{classify} pré-treinado nas mesmas partições
+\end{enumerate}
+\end{frame}
+
+\fala{Paulo}
+\begin{frame}{Dúvidas}
+\begin{enumerate}
+\item O critério de quase-duplicatas (dHash nas 8 orientações, limiar de 12 bits) é suficiente, ou esperam outra verificação?
+\item Usar o \textbf{mesmo aumento de dados} (espelhos e giros de 90°) também nas MLPs é adequado para a comparação?
+\item Selecionar e parar pelo F1 macro de validação, em vez da perda, está de acordo com o protocolo?
+\item Treinar no Google Colab em sessões diferentes, mas na mesma GPU (T4), conta como "mesmo hardware"?
+\item No artigo, o espaçamento simples é aceito para caber em 10 páginas?
+\end{enumerate}
+\vfill
+\centering\small Código e partições: \repo
+\end{frame}
+
+\end{document}

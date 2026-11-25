@@ -1,0 +1,249 @@
+% Pitch final (10 a 15 minutos). Números e figuras de resultados entram sozinhos após os treinos.
+\documentclass[aspectratio=169,10pt,t]{beamer}
+\newcommand{\tipodoc}{Pitch}
+\input{tema_slides}
+
+\title{Classificação de Cenas Aéreas com Redes Neurais}
+\subtitle{MLP, CNN e o efeito da resolução no NWPU-RESISC45}
+\author{Paulo Henrico Rabelo (2312652) \quad Joey Alan (2320416)}
+\date{Projeto 3 \textperiodcentered{} \repo}
+
+\begin{document}
+
+\begin{frame}[plain]
+\titlepage
+\end{frame}
+
+\fala{Paulo}
+\begin{frame}{O problema}
+\begin{columns}[T]
+\begin{column}{0.52\textwidth}
+\begin{itemize}
+\item Classificar uma cena aérea inteira: aeroporto, floresta, porto…
+\item Base para mapeamento urbano, monitoramento ambiental e planejamento
+\item \textbf{Pergunta:} como a arquitetura e a resolução da imagem afetam o acerto, e quando o ganho compensa o custo?
+\end{itemize}
+\vskip3mm
+\destaque{MLP vê a imagem como uma lista de 49.152 números.\\CNN vê vizinhanças: bordas, texturas, formas.}
+\end{column}
+\begin{column}{0.44\textwidth}
+\centering\figuraarq{\linewidth}{5.2cm}{eda_exemplos.png}{notebooks/01\_exploracao.ipynb}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Dados: 10 classes do NWPU-RESISC45}
+\begin{columns}[T]
+\begin{column}{0.46\textwidth}
+\begin{itemize}
+\item \res{total} imagens RGB 256\,×\,256, 700 por classe (Google Earth, 30 a 0,2 m/pixel)
+\item Ambientes naturais (floresta, deserto, montanha, rio, praia) e construídos (aeroporto, porto, residencial, tanques, agrícola circular)
+\item \res{problemas} arquivos com problema; nenhuma exclusão
+\item \res{dup/exatas} duplicatas exatas e \res{dup/quase} quase-duplicatas encontradas
+\end{itemize}
+\end{column}
+\begin{column}{0.5\textwidth}
+\centering\figuraarq{\linewidth}{5.2cm}{eda_duplicatas.png}{notebooks/01\_exploracao.ipynb}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Preparação sem vazamento}
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\begin{enumerate}
+\item SHA-256 + dHash (8 orientações) agrupam versões da mesma cena
+\item Sorteio 70/15/15 por classe, semente 42, com cada grupo como unidade: \res{part/total/treino} / \res{part/total/validacao} / \res{part/total/teste}
+\item Uma única divisão salva e reutilizada nos 6 modelos e no bônus
+\item Pixels ÷ 255: nenhuma estatística aprendida
+\item Aumento (espelhos e giros de 90°) só no treino
+\end{enumerate}
+\end{column}
+\begin{column}{0.48\textwidth}
+\destaque{\textbf{Teste intocado:} as escolhas usam só a validação. O teste foi avaliado uma única vez, no fim.}
+\vskip3mm
+\centering\figuraarq{\linewidth}{3.4cm}{eda_contagens.png}{notebooks/01\_exploracao.ipynb}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{O que a exploração antecipou}
+\begin{columns}[T]
+\begin{column}{0.44\textwidth}
+Em cor e textura global (só treino):
+\begin{itemize}
+\item Floresta e deserto: fáceis (89\% e 76\%)
+\item Montanha (14\%): se mistura com rio, agrícola circular e aeroporto
+\item Aeroporto: confunde com rio (22\%)
+\end{itemize}
+\vskip2mm
+\destaque{Hipótese: forma e organização espacial são decisivas, e a CNN deve levar vantagem.}
+\end{column}
+\begin{column}{0.53\textwidth}
+\centering\figuraarq{\linewidth}{5.2cm}{eda_ambiguidades.png}{notebooks/01\_exploracao.ipynb}
+\end{column}
+\end{columns}
+\end{frame}
+
+\fala{Joey}
+\begin{frame}{Quatro arquiteturas, seis treinos}
+\small
+\begin{tabularx}{\linewidth}{@{}lLrL@{}}
+\toprule
+Modelo & Estrutura & Parâmetros & Hipótese\\
+\midrule
+MLP A & 49.152 → Dense 256 → 10 & 12,59 M & referência sem viés espacial\\
+MLP B & 49.152 → 256 → 128 → 64 → 10 & 12,63 M & isola a \textbf{profundidade}\\
+CNN A & 3 blocos Conv-BN-ReLU-Pool (32/64/128) → GAP → 10 & 95 mil & padrões locais, 132× menos parâmetros\\
+CNN B & 4 blocos (até 256 filtros) → GAP → Dense 128 → 10 & 424 mil & campo receptivo 22 → 46 px\\
+\bottomrule
+\end{tabularx}
+\vskip3mm
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\destaque{\textbf{Treinos:} MLP-A/B-128, CNN-A/B-128 e CNN-A/B-256, todos com pesos novos.}
+\end{column}
+\begin{column}{0.48\textwidth}
+\destaque{\textbf{GAP:} a mesma CNN tem os mesmos parâmetros em 128 e 256 px. Só a resolução muda.}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Protocolo}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\begin{itemize}
+\item Adam (0,001), entropia cruzada, lote 32, semente 42
+\item Até 40 épocas; para após 8 sem melhora
+\item Checkpoint = maior \textbf{F1 macro de validação}
+\item Mesmas condições para cada CNN nas duas resoluções
+\item Hardware: \pend{GPU utilizada}
+\end{itemize}
+\end{column}
+\begin{column}{0.46\textwidth}
+\destaque{\textbf{Lição de percurso:} com o \textit{momentum} padrão do BatchNorm (0,99), a validação colapsava (11\% contra 66\% no treino). Com 0,9, as estatísticas de inferência acompanham o treino.}
+\end{column}
+\end{columns}
+\end{frame}
+
+\fala{Paulo}
+\begin{frame}{Resultados no teste: desempenho e custo}
+\centering\small
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+Modelo & F1 valid. & Acurácia teste & F1 macro teste & Parâm. & Min de treino & s/época\\
+\midrule
+MLP-A-128 & \res{MLP-A-128/f1_macro_validacao} & \res{MLP-A-128/acuracia_teste} & \res{MLP-A-128/f1_macro_teste} & 12,59 M & \res{MLP-A-128/tempo_total_min} & \res{MLP-A-128/tempo_medio_epoca_s}\\
+MLP-B-128 & \res{MLP-B-128/f1_macro_validacao} & \res{MLP-B-128/acuracia_teste} & \res{MLP-B-128/f1_macro_teste} & 12,63 M & \res{MLP-B-128/tempo_total_min} & \res{MLP-B-128/tempo_medio_epoca_s}\\
+CNN-A-128 & \res{CNN-A-128/f1_macro_validacao} & \res{CNN-A-128/acuracia_teste} & \res{CNN-A-128/f1_macro_teste} & 95 mil & \res{CNN-A-128/tempo_total_min} & \res{CNN-A-128/tempo_medio_epoca_s}\\
+CNN-B-128 & \res{CNN-B-128/f1_macro_validacao} & \res{CNN-B-128/acuracia_teste} & \res{CNN-B-128/f1_macro_teste} & 424 mil & \res{CNN-B-128/tempo_total_min} & \res{CNN-B-128/tempo_medio_epoca_s}\\
+CNN-A-256 & \res{CNN-A-256/f1_macro_validacao} & \res{CNN-A-256/acuracia_teste} & \res{CNN-A-256/f1_macro_teste} & 95 mil & \res{CNN-A-256/tempo_total_min} & \res{CNN-A-256/tempo_medio_epoca_s}\\
+CNN-B-256 & \res{CNN-B-256/f1_macro_validacao} & \res{CNN-B-256/acuracia_teste} & \res{CNN-B-256/f1_macro_teste} & 424 mil & \res{CNN-B-256/tempo_total_min} & \res{CNN-B-256/tempo_medio_epoca_s}\\
+\bottomrule
+\end{tabular}
+\vskip4mm
+\raggedright
+\destaque{\pend{Mensagem principal em uma frase: quem venceu, por quanto e a que custo.}}
+\end{frame}
+
+\begin{frame}{Curvas de aprendizagem}
+\centering\figuraarq{0.92\linewidth}{4.9cm}{painel_curvas_perda.png}{scripts/avaliar.py}
+\vskip2mm
+\raggedright\small\pend{Subajuste ou sobreajuste? Em que época está cada checkpoint? A MLP diverge cedo entre treino e validação?}
+\end{frame}
+
+\begin{frame}{MLP × CNN em 128\,×\,128}
+\begin{columns}[T]
+\begin{column}{0.38\textwidth}
+\begin{itemize}
+\item MLP A: \res{MLP-A-128/f1_macro_teste} \quad MLP B: \res{MLP-B-128/f1_macro_teste}
+\item CNN A: \res{CNN-A-128/f1_macro_teste} \quad CNN B: \res{CNN-B-128/f1_macro_teste}
+\item \pend{A profundidade ajudou a MLP? A CNN, com 132× menos parâmetros, venceu?}
+\end{itemize}
+\end{column}
+\begin{column}{0.58\textwidth}
+\centering\figuraarq{\linewidth}{5.2cm}{f1_por_classe_teste.png}{scripts/avaliar.py}
+\end{column}
+\end{columns}
+\end{frame}
+
+\fala{Joey}
+\begin{frame}{Resolução: 128 × 256 e o custo}
+\begin{columns}[T]
+\begin{column}{0.38\textwidth}
+\begin{itemize}
+\item CNN A: \res{CNN-A-128/f1_macro_teste} → \res{CNN-A-256/f1_macro_teste} (F1 teste)
+\item CNN B: \res{CNN-B-128/f1_macro_teste} → \res{CNN-B-256/f1_macro_teste}
+\item Tempo/época A: \res{CNN-A-128/tempo_medio_epoca_s} → \res{CNN-A-256/tempo_medio_epoca_s} s
+\item Tempo/época B: \res{CNN-B-128/tempo_medio_epoca_s} → \res{CNN-B-256/tempo_medio_epoca_s} s
+\item \pend{Compensa? A CNN B ganhou mais, como previa o campo receptivo?}
+\end{itemize}
+\end{column}
+\begin{column}{0.58\textwidth}
+\centering\figuraarq{\linewidth}{5.2cm}{desempenho_custo_teste.png}{scripts/avaliar.py}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Onde os modelos se confundem}
+\begin{columns}[T]
+\begin{column}{0.3\textwidth}
+\small
+\pend{Top 3 pares confundidos e a explicação visual:}
+\begin{itemize}
+\item \pend{montanha ↔ …}
+\item \pend{aeroporto ↔ …}
+\item \pend{praia ↔ …}
+\end{itemize}
+\end{column}
+\begin{column}{0.67\textwidth}
+\centering\figuraarq{\linewidth}{5.6cm}{painel_confusao_teste.png}{scripts/avaliar.py}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Erros com alta confiança (\res{sel/modelo_erros})}
+\centering\figuraarq{\linewidth}{3.9cm}{erros_teste.png}{scripts/avaliar.py}
+\vskip3mm
+\raggedright\small Modelo de maior F1 macro de validação; seis erros de teste com maior confiança.\\
+\pend{O que cada erro revela: rótulo ambíguo, contexto dominante ou detalhe perdido?}
+\end{frame}
+
+\fala{Paulo}
+\begin{frame}{Limitações}
+\begin{itemize}
+\item \textbf{Um treino por configuração:} diferenças pequenas podem ser só variação entre sementes
+\item \textbf{Mesma distribuição:} o teste vem do mesmo Google Earth, não de novas regiões, sensores ou estações
+\item \textbf{Quase-duplicatas:} o \textit{hash} não pega cenas vizinhas parcialmente sobrepostas, então o teste pode ser otimista
+\item \textbf{Resolução simulada:} reduzimos a mesma imagem; um sensor mais grosseiro real tem outro ruído e outro borramento
+\item \textbf{Sem pré-treino} nos 6 modelos (exigência do projeto); o bônus YOLO mostra o efeito do pré-treino
+\end{itemize}
+\end{frame}
+
+\fala{Paulo e Joey}
+\begin{frame}{Conclusões}
+\begin{enumerate}
+\item \pend{MLP × CNN: …}
+\item \pend{Resolução: …}
+\item \pend{Custo-benefício: …}
+\item \pend{Classes difíceis: …}
+\end{enumerate}
+\vskip4mm
+\destaque{\textbf{Próximos passos:} repetir com várias sementes, testar pesos pré-treinados e validar em outra base (por exemplo, AID).}
+\vfill
+\centering\small Código, partições, métricas e figuras: \repo
+\end{frame}
+
+\begin{frame}[plain]
+\vfill
+\centering
+{\color{azul}\fontsize{30}{34}\selectfont\bfseries Obrigado!\par}
+\vskip4mm
+{\large\color{azulclaro}Perguntas?\par}
+\vskip6mm
+\small Paulo Henrico Rabelo (2312652) \quad Joey Alan (2320416)\\[2pt]
+\repo
+\vfill
+\end{frame}
+
+\end{document}

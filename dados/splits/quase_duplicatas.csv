@@ -1,0 +1,9 @@
+arquivo_a,classe_a,arquivo_b,classe_b,distancia_hamming,duplicata_exata
+dados/raw/NWPU-RESISC45/airport/airport_050.jpg,airport,dados/raw/NWPU-RESISC45/airport/airport_420.jpg,airport,0,True
+dados/raw/NWPU-RESISC45/airport/airport_064.jpg,airport,dados/raw/NWPU-RESISC45/airport/airport_527.jpg,airport,0,True
+dados/raw/NWPU-RESISC45/airport/airport_118.jpg,airport,dados/raw/NWPU-RESISC45/airport/airport_315.jpg,airport,0,True
+dados/raw/NWPU-RESISC45/airport/airport_243.jpg,airport,dados/raw/NWPU-RESISC45/airport/airport_397.jpg,airport,0,True
+dados/raw/NWPU-RESISC45/airport/airport_289.jpg,airport,dados/raw/NWPU-RESISC45/airport/airport_635.jpg,airport,0,True
+dados/raw/NWPU-RESISC45/airport/airport_361.jpg,airport,dados/raw/NWPU-RESISC45/airport/airport_509.jpg,airport,0,True
+dados/raw/NWPU-RESISC45/dense_residential/dense_residential_175.jpg,dense_residential,dados/raw/NWPU-RESISC45/dense_residential/dense_residential_638.jpg,dense_residential,7,False
+dados/raw/NWPU-RESISC45/mountain/mountain_111.jpg,mountain,dados/raw/NWPU-RESISC45/mountain/mountain_324.jpg,mountain,0,False

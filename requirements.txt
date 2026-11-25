@@ -2,3 +2,8 @@ tensorflow[and-cuda]==2.21.0
 scikit-learn>=1.5,<2
 Pillow>=11,<13
 python-dotenv>=1,<2
+numpy>=2,<3
+pandas>=2.2,<4
+matplotlib>=3.9,<4
+jupyter>=1.1,<2
+nbconvert>=7,<8
