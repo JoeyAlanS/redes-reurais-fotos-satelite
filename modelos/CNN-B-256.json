@@ -1,0 +1,47 @@
+{
+  "experimento": "CNN-B-256",
+  "familia": "CNN",
+  "variante": "B",
+  "resolucao": 256,
+  "parametros": 424042,
+  "parametros_treinaveis": 423082,
+  "funcao_perda": "sparse_categorical_crossentropy",
+  "otimizador": "Adam",
+  "taxa_aprendizagem": 0.001,
+  "lote": 8,
+  "limite_epocas": 12,
+  "criterio_parada": "F1 macro de validação sem melhora por 4 épocas; restaura a melhor época",
+  "paciencia": 4,
+  "epocas_executadas": 12,
+  "checkpoint_epoca": 10,
+  "f1_macro_validacao_checkpoint": 0.8170007285825761,
+  "acuracia_validacao_checkpoint": 0.8160152526215443,
+  "perda_validacao_checkpoint": 0.5474186539649963,
+  "imagens_treino": 4901,
+  "imagens_validacao": 1049,
+  "preprocessamento": "RGB, redimensionamento bilinear com antialias a partir do original 256x256, pixels/255",
+  "aumento": "espelhamento horizontal/vertical e rotação de 90° aleatórios (só treino)",
+  "semente": 42,
+  "tempo_total_segundos": 434.62233946400033,
+  "tempo_medio_epoca_segundos": 36.13593301299992,
+  "metodo_tempo": "time.perf_counter em volta de model.fit; inclui leitura/cache das imagens na 1ª época e a predição de validação usada no F1; exclui download e preparação das partições",
+  "tamanho_modelo_bytes": 1770929,
+  "hardware": {
+    "dispositivo": "GPU",
+    "gpus": [
+      "NVIDIA GeForce RTX 2050"
+    ],
+    "cpu": "12th Gen Intel(R) Core(TM) i5-12450H",
+    "nucleos_cpu": 12,
+    "sistema": "Linux-7.2.11-arch1-1-x86_64-with-glibc2.44"
+  },
+  "versoes": {
+    "python": "3.12.16",
+    "tensorflow": "2.21.0",
+    "keras": "3.15.1",
+    "numpy": "2.5.5",
+    "scikit-learn": "1.9.1",
+    "pillow": "12.3.0"
+  },
+  "data": "2026-11-26T03:06:49+00:00"
+}

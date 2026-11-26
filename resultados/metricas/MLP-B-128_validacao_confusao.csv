@@ -1,0 +1,11 @@
+,airport,beach,circular_farmland,dense_residential,desert,forest,harbor,mountain,river,storage_tank
+airport,11,10,7,28,8,2,7,1,7,23
+beach,2,83,3,0,2,1,6,2,1,5
+circular_farmland,4,5,64,4,0,4,0,7,13,4
+dense_residential,1,0,1,66,1,8,17,3,2,6
+desert,0,1,1,2,89,0,0,7,0,5
+forest,0,0,0,0,0,103,0,0,2,0
+harbor,0,6,3,17,0,3,69,0,6,1
+mountain,5,1,15,15,16,20,3,16,8,6
+river,2,5,13,4,3,17,18,3,39,1
+storage_tank,3,10,2,21,1,0,5,7,2,54

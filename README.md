@@ -4,7 +4,7 @@ Projeto da Unidade III (Redes Neurais e Deep Learning) da disciplina de Ciência
 
 **Autores:** Paulo Henrico Rabelo (matrícula 2312652) e Joey Alan (matrícula 2320416).
 
-Comparamos duas MLPs e duas CNNs, treinadas do zero, no recorte de dez classes do NWPU-RESISC45, e medimos o efeito da resolução (128 × 128 versus 256 × 256) nas CNNs. São seis execuções finais: `MLP-A-128`, `MLP-B-128`, `CNN-A-128`, `CNN-B-128`, `CNN-A-256` e `CNN-B-256`. Como bônus, ajustamos um YOLO pré-treinado no modo *classify* às mesmas partições.
+Comparamos duas MLPs e duas CNNs, treinadas do zero, no recorte de dez classes do NWPU-RESISC45, e medimos o efeito da resolução (128 × 128 versus 256 × 256) nas CNNs. As seis execuções finais e a avaliação única do teste foram concluídas. O YOLO *classify* é um bônus opcional ainda não executado.
 
 ## Dados e classes
 
@@ -65,7 +65,7 @@ cp .env.example .env
 
 `./scripts/executar_tudo.sh` executa os passos 1, 3, 4, 5 e 6 em sequência e pula modelos já treinados. Com `--teste`, inclui o passo 7. No Google Colab, use `notebooks/00_colab_treino.ipynb`, que baixa os dados, instala as dependências, roda os seis treinos em GPU e copia os resultados para o Drive.
 
-**Para avaliar sem treinar:** baixe os modelos (seção *Modelos salvos*) para `modelos/` e rode os passos 5 a 8. As previsões, métricas, históricos e figuras já estão versionados em `resultados/`.
+**Para avaliar sem treinar:** as previsões, métricas, históricos e figuras gerados estão em `resultados/`. Os checkpoints `.keras` estão disponíveis localmente em `modelos/`; para reproduzir as previsões em outra máquina, é necessário obtê-los junto à equipe ou executar os treinos.
 
 ## Preparação e prevenção de vazamento
 
@@ -96,9 +96,9 @@ As camadas ocultas das MLPs usam BatchNorm e Dropout de 0,3; as CNNs têm Dropou
 | Biblioteca | TensorFlow/Keras (versões em `requirements.lock.txt` e em cada `modelos/<exp>.json`) |
 | Inicialização | pesos novos em todas as execuções, sem pré-treinamento |
 | Perda / otimizador | entropia cruzada categórica esparsa / Adam, taxa 0,001 |
-| Lote | 32 nas duas resoluções (`BATCH_SIZE_128`, `BATCH_SIZE_256`) |
-| Épocas | até 40 (`MAX_EPOCHS`) |
-| Seleção e parada | F1 macro de validação calculado a cada época; o checkpoint é a época de maior F1; para após 8 épocas sem melhora (`PATIENCE`) e restaura a melhor |
+| Lote executado | 8 nas duas resoluções (`BATCH_SIZE_128`, `BATCH_SIZE_256`), para caber na RTX 2050 de 4 GB |
+| Épocas executadas | limite de 12 (`MAX_EPOCHS`) |
+| Seleção e parada | F1 macro de validação calculado a cada época; checkpoint da época de maior F1; parada após 4 épocas sem melhora (`PATIENCE`) |
 | Semente | 42 (`keras.utils.set_random_seed`, embaralhamento e sorteio das partições) |
 | Aumento | espelhamento horizontal/vertical e rotação de 90° aleatórios, só no treino (`AUGMENTATION=1`) |
 | Custo | `time.perf_counter` em volta de `model.fit`, mais o tempo de cada época; exclui download e preparação |
@@ -106,6 +106,19 @@ As camadas ocultas das MLPs usam BatchNorm e Dropout de 0,3; as CNNs têm Dropou
 Pré-processamento, semente, otimizador, taxa, lote e política de parada são os mesmos para cada CNN nas duas resoluções, o que isola o efeito da resolução. O teste não é lido durante o treino nem na escolha de configurações. Ele é previsto uma única vez, com `prever.py --teste`, depois de encerradas as escolhas. Buscas exploratórias extras devem ficar separadas das seis execuções finais; por exemplo, rode-as com outro `.env` e não sobrescreva `modelos/`.
 
 Cada `modelos/<exp>.json` registra a arquitetura, os hiperparâmetros, o critério de parada, a época do checkpoint, o F1 macro de validação do checkpoint recuperado, os tempos (total e médio por época), o tamanho do arquivo, o hardware (GPU/CPU) e as versões das bibliotecas.
+
+## Resultados dos seis treinos
+
+| Modelo | F1 macro validação | F1 macro teste | Tempo total (s) |
+|---|---:|---:|---:|
+| MLP-A-128 | 0,5409 | 0,5295 | 96,5 |
+| MLP-B-128 | 0,5325 | 0,5261 | 118,2 |
+| CNN-A-128 | 0,8169 | 0,8041 | 157,1 |
+| CNN-B-128 | **0,8195** | **0,8410** | 182,3 |
+| CNN-A-256 | 0,8067 | 0,8095 | 380,3 |
+| CNN-B-256 | 0,8170 | 0,8204 | 434,6 |
+
+`CNN-B-128` foi selecionada pelo maior F1 macro de validação. O teste foi previsto uma vez após essa escolha; o lote de **inferência** foi 4 por causa da memória da GPU e não altera o protocolo de treino. O artigo em `docs/artigo.pdf` discute custo, curvas, confusões e erros. Os números completos estão em `resultados/experimentos.csv` e `resultados/metricas/`.
 
 ## Evidências geradas (`scripts/avaliar.py`)
 
@@ -132,7 +145,14 @@ O script monta `dados/yolo/{train,val,test}/<classe>/` com links simbólicos par
 
 ## Modelos salvos
 
-Os arquivos `.keras` (e `YOLO-cls.pt`) não vão para o Git por causa do tamanho. Download: **[LINK A PREENCHER]**. Coloque-os em `modelos/` com os mesmos nomes (`MLP-A-128.keras` etc.). Os metadados (`modelos/*.json`) e os resumos estão versionados.
+Os seis arquivos `.keras` são ignorados pelo Git por causa do tamanho (as MLPs têm cerca de 49 MB cada). Eles estão anexados à [release `resultados-v1`](https://github.com/JoeyAlanS/redes-reurais-fotos-satelite/releases/tag/resultados-v1) deste repositório privado; é necessário acesso ao repositório para baixá-los. Para reproduzir as previsões sem treinar:
+
+```bash
+gh release download resultados-v1 -p '*.keras' -D modelos
+cd modelos && sha256sum -c SHA256SUMS.txt && cd ..
+```
+
+Os metadados, resumos e hashes SHA-256 ficam versionados em `modelos/`. O professor precisará ser adicionado como colaborador ao repositório privado para acessar a release.
 
 ## Documentos (`docs/`)
 
@@ -142,7 +162,7 @@ Os arquivos `.keras` (e `YOLO-cls.pt`) não vão para o Git por causa do tamanho
 ./docs/src/compilar.sh            # os três; ou: ./docs/src/compilar.sh artigo
 ```
 
-O script roda `scripts/dados_docs.py`, que lê `dados/splits/inventario.json`, `resultados/experimentos.csv` e `resultados/selecao.json` e grava os números em `docs/src/gerado/dados.tex`. Depois, compila com XeLaTeX (TeX Live com as fontes Liberation e Noto Sans). Números ainda não gerados aparecem como campo em branco e figuras ainda inexistentes, como um quadro vermelho com o nome do arquivo esperado. Após os treinos, basta recompilar. Os trechos de interpretação marcados em vermelho (`\pend{...}`) precisam ser escritos pela equipe. O acompanhamento não mostra nenhuma métrica de teste.
+O script roda `scripts/dados_docs.py`, que lê `dados/splits/inventario.json`, `resultados/experimentos.csv` e `resultados/selecao.json` e grava os números em `docs/src/gerado/dados.tex`. Depois, compila com XeLaTeX ou Tectonic. O artigo foi atualizado com os seis resultados, gráficos e discussão; acompanhamento e pitch ainda exigem revisão dos autores antes da entrega. O acompanhamento não deve mostrar métricas de teste.
 
 ## Estrutura
 

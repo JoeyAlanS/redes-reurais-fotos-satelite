@@ -1,0 +1,7 @@
+experimento,familia,variante,resolucao,parametros,tamanho_modelo_mb,lote,epocas_executadas,checkpoint_epoca,tempo_total_s,tempo_medio_epoca_s,dispositivo,acuracia_validacao,f1_macro_validacao,precisao_macro_validacao,recall_macro_validacao,classes_sem_previsao_validacao,acuracia_teste,f1_macro_teste,precisao_macro_teste,recall_macro_teste,classes_sem_previsao_teste
+MLP-A-128,MLP,A,128,12586506,48.04,8,11,7,96.5,8.6,NVIDIA GeForce RTX 2050,0.5529,0.5409,0.5422,0.5527,,0.5429,0.5295,0.53,0.5429,
+MLP-B-128,MLP,B,128,12626314,48.22,8,12,12,118.2,9.7,NVIDIA GeForce RTX 2050,0.5663,0.5325,0.5382,0.5658,,0.5571,0.5261,0.5395,0.5571,
+CNN-A-128,CNN,A,128,95210,0.42,8,12,8,157.1,13.0,NVIDIA GeForce RTX 2050,0.8217,0.8169,0.8322,0.8216,,0.8095,0.8041,0.8254,0.8095,
+CNN-B-128,CNN,B,128,424042,1.69,8,12,10,182.3,15.1,NVIDIA GeForce RTX 2050,0.8198,0.8195,0.8299,0.8197,,0.839,0.841,0.8564,0.839,
+CNN-A-256,CNN,A,256,95210,0.42,8,12,11,380.3,31.7,NVIDIA GeForce RTX 2050,0.8141,0.8067,0.816,0.8138,,0.8143,0.8095,0.8198,0.8143,
+CNN-B-256,CNN,B,256,424042,1.69,8,12,10,434.6,36.1,NVIDIA GeForce RTX 2050,0.816,0.817,0.8324,0.816,,0.82,0.8204,0.8377,0.82,

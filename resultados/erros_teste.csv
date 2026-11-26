@@ -1,0 +1,7 @@
+experimento,arquivo,classe_real,classe_prevista,confianca
+CNN-B-128,dados/raw/NWPU-RESISC45/desert/desert_614.jpg,desert,forest,0.996148
+CNN-B-128,dados/raw/NWPU-RESISC45/desert/desert_274.jpg,desert,mountain,0.995987
+CNN-B-128,dados/raw/NWPU-RESISC45/desert/desert_543.jpg,desert,mountain,0.993104
+CNN-B-128,dados/raw/NWPU-RESISC45/storage_tank/storage_tank_573.jpg,storage_tank,dense_residential,0.982587
+CNN-B-128,dados/raw/NWPU-RESISC45/airport/airport_229.jpg,airport,dense_residential,0.979757
+CNN-B-128,dados/raw/NWPU-RESISC45/river/river_013.jpg,river,forest,0.975169

@@ -1,9 +1,9 @@
 % Artigo do Projeto 3 — compilar com docs/src/compilar.sh (XeLaTeX).
 \documentclass[12pt,a4paper]{article}
 \usepackage{fontspec}
-\setmainfont{Liberation Serif}
-\setsansfont{Liberation Sans}
-\setmonofont[Scale=0.88]{Liberation Mono}
+\setmainfont{Noto Serif}
+\setsansfont{Noto Sans}
+\setmonofont[Scale=0.88]{Hack}
 \usepackage[none]{hyphenat}  % TeX Live sem padrões de hifenização em português: texto sem hifenizar
 \usepackage[top=3cm,left=3cm,bottom=2cm,right=2cm]{geometry}
 \usepackage{xcolor,graphicx,booktabs,tabularx,multirow,array,float,microtype,setspace,enumitem}
@@ -43,12 +43,12 @@ Joey Alan (matrícula 2320416)\textsuperscript{1}\\[4pt]
 \end{center}
 
 \vspace{4pt}
-\noindent\textbf{Resumo:} Este trabalho investiga como a arquitetura e a resolução das imagens afetam a classificação de cenas aéreas e quais ganhos justificam o custo computacional. Em um recorte de dez classes do NWPU-RESISC45 (7.000 imagens RGB de 256~×~256 pixels), comparamos duas redes perceptron multicamadas (MLP) e duas redes neurais convolucionais (CNN), todas treinadas a partir de pesos aleatórios, e treinamos as mesmas CNNs em 128~×~128 e 256~×~256 pixels, num total de seis treinamentos. A divisão estratificada 70/15/15 mantém duplicatas e quase-duplicatas na mesma partição, a seleção de checkpoints usa o F1 macro de validação e o teste é avaliado uma única vez. \pend{Resultados principais: F1 macro de teste das MLPs (\res{MLP-A-128/f1_macro_teste} e \res{MLP-B-128/f1_macro_teste}) versus CNNs em 128 px (\res{CNN-A-128/f1_macro_teste} e \res{CNN-B-128/f1_macro_teste}); efeito de 256 px (\res{CNN-A-256/f1_macro_teste} e \res{CNN-B-256/f1_macro_teste}) e do custo; classes mais confundidas.}
+\noindent\textbf{Resumo:} Investigamos como arquitetura e resolução afetam a classificação de cenas aéreas e o custo de treino. No recorte de dez classes do NWPU-RESISC45 (7.000 imagens RGB), treinamos do zero duas MLPs e duas CNNs, repetindo as CNNs em 128 e 256 pixels: seis execuções. A divisão estratificada 70/15/15 mantém duplicatas no mesmo conjunto; os checkpoints são escolhidos por F1 macro de validação e o teste é avaliado uma vez. No teste, as MLPs alcançaram F1 macro 0,529 e 0,526, enquanto as CNNs em 128 pixels obtiveram 0,804 e 0,841. A CNN B em 128 pixels foi selecionada pela validação e atingiu 0,841 no teste. Em 256 pixels, a CNN A chegou a 0,809 e a B a 0,820, com cerca de 2,4 vezes o tempo por época. Rio e montanha figuraram entre as confusões mais frequentes. Os resultados descrevem uma única semente e este recorte de dados.
 
 \noindent\textbf{Palavras-chave:} Sensoriamento remoto. Classificação de cenas. Redes neurais convolucionais. Perceptron multicamadas. Resolução espacial.
 
 \vspace{3pt}
-\noindent\textbf{Abstract:} We study how architecture and input resolution affect aerial scene classification on a ten-class subset of NWPU-RESISC45. Two multilayer perceptrons and two convolutional networks are trained from scratch, and both CNNs are trained at 128 and 256 pixels (six runs). Duplicates are kept within a single split, checkpoints are selected by validation macro-F1 and the test set is evaluated once. \pend{Main findings.}
+\noindent\textbf{Abstract:} We compare two multilayer perceptrons and two convolutional networks on a ten-class subset of NWPU-RESISC45. The CNNs are trained from scratch at 128 and 256 pixels, yielding six runs. Duplicate images remain in one split, checkpoints are selected by validation macro-F1, and the held-out test set is evaluated once. Test macro-F1 was 0.529 and 0.526 for the MLPs and 0.804 and 0.841 for the 128-pixel CNNs. The validation-selected CNN B at 128 pixels achieved the highest test macro-F1 (0.841). At 256 pixels, CNN A and B reached 0.809 and 0.820, while their time per epoch increased approximately 2.4-fold. These are results from one seed and dataset split.
 
 \noindent\textbf{Keywords:} Remote sensing. Scene classification. Convolutional neural networks. Multilayer perceptron.
 
@@ -115,7 +115,7 @@ Cada imagem é decodificada em RGB, redimensionada a partir do original para 128
 
 \subsection{Arquiteturas}
 
-A Tabela~\ref{tab:arq} resume as quatro arquiteturas. As MLPs usam normalização em lote (\textit{batch normalization}) (IOFFE; SZEGEDY, 2015) e \textit{dropout} de 0,3 (SRIVASTAVA \textit{et al.}, 2014) nas camadas ocultas. A MLP~B tem praticamente o mesmo número de parâmetros da A, já que 99,7\% deles estão na primeira camada densa; a comparação isola, assim, o efeito da \textbf{profundidade}. As CNNs empilham blocos Conv 3~×~3 → normalização em lote → ReLU → MaxPooling 2~×~2 e terminam com agregação média global (\textit{GlobalAveragePooling2D}) (LIN; CHEN; YAN, 2014). Por isso filtros, \textit{kernels}, blocos e cabeça, e portanto os parâmetros, são idênticos em 128 e 256 pixels. A CNN~B acrescenta um quarto bloco e uma camada densa, o que amplia o campo receptivo de 22 para 46 pixels. Em 256 pixels, o campo receptivo da CNN~A cobre só 8,6\% do lado da imagem (contra 17\% em 128), e por isso esperamos que a CNN~B se beneficie mais da resolução maior.
+A Tabela~\ref{tab:arq} resume as quatro arquiteturas. As MLPs usam normalização em lote (\textit{batch normalization}) (IOFFE; SZEGEDY, 2015) e \textit{dropout} de 0,3 (SRIVASTAVA \textit{et al.}, 2014) nas camadas ocultas. A MLP~B tem praticamente o mesmo número de parâmetros da A, já que 99,7\% deles estão na primeira camada densa; a comparação isola, assim, o efeito da \textbf{profundidade}. As CNNs empilham blocos Conv 3~×~3 \(\rightarrow\) normalização em lote \(\rightarrow\) ReLU \(\rightarrow\) MaxPooling 2~×~2 e terminam com agregação média global (\textit{GlobalAveragePooling2D}) (LIN; CHEN; YAN, 2014). Por isso filtros, \textit{kernels}, blocos e cabeça, e portanto os parâmetros, são idênticos em 128 e 256 pixels. A CNN~B acrescenta um quarto bloco e uma camada densa, o que amplia o campo receptivo de 22 para 46 pixels. Em 256 pixels, o campo receptivo da CNN~A cobre só 8,6\% do lado da imagem (contra 17\% em 128), e por isso esperamos que a CNN~B se beneficie mais da resolução maior.
 
 A normalização em lote usa \textit{momentum} 0,9 em vez do padrão do Keras (0,99). Num teste de duas épocas com o padrão, a variância móvel da primeira camada ainda refletia o valor inicial (0,048, contra 0,003 medido nos lotes), e a validação colapsava numa única classe (11\% de acurácia, contra 66\% no treino). Com 0,9, as estatísticas de inferência acompanham as de treino desde a primeira época.
 
@@ -127,10 +127,10 @@ A normalização em lote usa \textit{momentum} 0,9 em vez do padrão do Keras (0
 \toprule
 Modelo & Estrutura & Parâmetros & Hipótese\\
 \midrule
-MLP A & vetor 49.152 → Dense 256 → Dense 10 & 12.586.506 & referência sem viés espacial\\
-MLP B & vetor 49.152 → Dense 256 → 128 → 64 → Dense 10 & 12.626.314 & profundidade com o mesmo orçamento\\
-CNN A & 3 blocos (32/64/128 filtros) → GAP → Dense 10 & 95.210 & padrões locais com 132 vezes menos parâmetros\\
-CNN B & 4 blocos (32/64/128/256) → GAP → Dense 128 → Dense 10 & 424.042 & campo receptivo e capacidade maiores\\
+MLP A & vetor 49.152 \(\rightarrow\) Dense 256 \(\rightarrow\) Dense 10 & 12.586.506 & referência sem viés espacial\\
+MLP B & vetor 49.152 \(\rightarrow\) Dense 256 \(\rightarrow\) 128 \(\rightarrow\) 64 \(\rightarrow\) Dense 10 & 12.626.314 & profundidade com o mesmo orçamento\\
+CNN A & 3 blocos (32/64/128 filtros) \(\rightarrow\) GAP \(\rightarrow\) Dense 10 & 95.210 & padrões locais com 132 vezes menos parâmetros\\
+CNN B & 4 blocos (32/64/128/256) \(\rightarrow\) GAP \(\rightarrow\) Dense 128 \(\rightarrow\) Dense 10 & 424.042 & campo receptivo e capacidade maiores\\
 \bottomrule
 \end{tabularx}
 \fonteautores
@@ -138,7 +138,7 @@ CNN B & 4 blocos (32/64/128/256) → GAP → Dense 128 → Dense 10 & 424.042 & 
 
 \subsection{Protocolo de treinamento e avaliação}
 
-Os seis treinamentos (MLP-A-128, MLP-B-128, CNN-A-128, CNN-B-128, CNN-A-256 e CNN-B-256) partem de pesos novos, sem pré-treinamento, em TensorFlow/Keras (ABADI \textit{et al.}, 2016; CHOLLET \textit{et al.}, 2015). Usam entropia cruzada categórica, otimizador Adam com taxa 0,001 (KINGMA; BA, 2015), lote de 32 imagens, semente 42 e no máximo 40 épocas. Ao fim de cada época, calculamos o F1 macro da validação. O checkpoint salvo é o da época de maior F1, e o treino para após 8 épocas sem melhora. Para isolar o efeito da resolução, cada CNN mantém pré-processamento, semente, otimizador, taxa, lote e política de parada nas duas resoluções. O hardware foi \pend{GPU/CPU utilizada}.
+Os seis treinamentos (MLP-A-128, MLP-B-128, CNN-A-128, CNN-B-128, CNN-A-256 e CNN-B-256) partem de pesos novos, sem pré-treinamento, em TensorFlow 2.21.0/Keras 3.15.1 (ABADI \textit{et al.}, 2016; CHOLLET \textit{et al.}, 2015). Usam entropia cruzada categórica esparsa, Adam com taxa 0,001 (KINGMA; BA, 2015), lote de 8 imagens, semente 42 e no máximo 12 épocas. O lote foi reduzido para caber na NVIDIA GeForce RTX 2050 de 4~GB e mantido igual nas duas resoluções. Ao fim de cada época, calculamos o F1 macro da validação. O checkpoint salvo é o da época de maior F1, e o treino para após 4 épocas sem melhora. Cada CNN mantém pré-processamento, semente, otimizador, taxa, lote e política de parada nas duas resoluções.
 
 O tempo é medido com \texttt{time.perf\_counter} em volta do treinamento, incluindo a leitura das imagens e a validação de cada época e excluindo o download e a preparação das partições. Só depois de encerrar todas as escolhas avaliamos os seis modelos salvos, uma única vez, no mesmo teste. Reportamos acurácia, F1 macro e precisão, recall, F1 e suporte por classe (PEDREGOSA \textit{et al.}, 2011). Quando uma classe nunca é prevista, sua precisão é 0/0; adotamos o valor zero (\texttt{zero\_division=0}) e listamos essas classes nas tabelas do repositório.
 
@@ -165,7 +165,7 @@ CNN-A-256 & \res{CNN-A-256/f1_macro_validacao} & \res{CNN-A-256/acuracia_teste} 
 CNN-B-256 & \res{CNN-B-256/f1_macro_validacao} & \res{CNN-B-256/acuracia_teste} & \res{CNN-B-256/f1_macro_teste} & 424,0 mil & \res{CNN-B-256/tamanho_modelo_mb} & \res{CNN-B-256/epocas_executadas} (\res{CNN-B-256/checkpoint_epoca}) & \res{CNN-B-256/tempo_total_min} & \res{CNN-B-256/tempo_medio_epoca_s}\\
 \bottomrule
 \end{tabular}
-\fonte{elaborado pelos autores. Lote de 32 imagens; hardware: \pend{GPU/CPU}.}
+\fonte{elaborado pelos autores. Lote de 8 imagens; NVIDIA GeForce RTX 2050 (4~GB). Tempo inclui validação por época.}
 \end{table}
 
 \begin{figure}[H]
@@ -177,12 +177,26 @@ CNN-B-256 & \res{CNN-B-256/f1_macro_validacao} & \res{CNN-B-256/acuracia_teste} 
 
 \begin{figure}[H]
 \centering
+\caption{Acurácia de treino e validação e F1 macro de validação por época; linha pontilhada: checkpoint}\label{fig:curvas-acc}
+\figuraarq{0.9\linewidth}{6.0cm}{painel_curvas_acuracia.png}{scripts/avaliar.py}
+\fonteautores
+\end{figure}
+
+\begin{figure}[H]
+\centering
 \caption{Matrizes de confusão no teste, normalizadas por classe real (reais nas linhas, previstas nas colunas)}\label{fig:confusao}
 \figuraarq{0.95\linewidth}{10cm}{painel_confusao_teste.png}{scripts/avaliar.py}
 \fonteautores
 \end{figure}
 
-\pend{Descrever os números da Tabela~\ref{tab:resultados}: diferença MLP × CNN em 128 px; variação de cada CNN de 128 para 256 px; razão de tempo por época entre 256 e 128 px. Citar as contagens das matrizes completas (\texttt{resultados/\allowbreak figuras/\allowbreak confusao\_*\_teste.png}) para os pares mais confundidos.}
+Na resolução de 128 pixels, a CNN~A superou a MLP~A por 0,275 ponto de F1 macro no teste; a CNN~B superou a MLP~B por 0,315. A CNN~B em 128 pixels foi escolhida pelo maior F1 macro de validação (0,820) e alcançou 0,841 no teste. Ao dobrar a entrada, a CNN~A ganhou apenas 0,005 ponto de F1 de teste, enquanto a CNN~B perdeu 0,021. O tempo médio por época aumentou 2,44 vezes na CNN~A e 2,39 vezes na B, sem mudar os parâmetros. As matrizes completas estão em \nolinkurl{resultados/metricas/} e as figuras individuais em \nolinkurl{resultados/figuras/}.
+
+\begin{figure}[H]
+\centering
+\caption{F1 macro de teste versus tempo total e número de parâmetros}\label{fig:custo}
+\figuraarq{0.84\linewidth}{5.3cm}{desempenho_custo_teste.png}{scripts/avaliar.py}
+\fonteautores
+\end{figure}
 
 \begin{figure}[H]
 \centering
@@ -193,21 +207,21 @@ CNN-B-256 & \res{CNN-B-256/f1_macro_validacao} & \res{CNN-B-256/acuracia_teste} 
 
 \section{Discussão}
 
-\textbf{MLP × CNN em 128~×~128.} \pend{Comparar MLP~A e MLP~B (a profundidade ajudou com o mesmo orçamento de parâmetros?) e as CNNs (\res{CNN-A-128/f1_macro_teste} e \res{CNN-B-128/f1_macro_teste}) com as MLPs.} Como as MLPs têm cerca de 132 vezes mais parâmetros que a CNN~A, qualquer vantagem das CNNs vem do viés indutivo da convolução, que compartilha pesos e é invariante a translação, e não da capacidade.
+\textbf{MLP × CNN em 128~×~128.} A MLP~B teve F1 de teste 0,526, ligeiramente abaixo dos 0,529 da A; a maior profundidade não trouxe ganho observável nesta execução. A CNN~A obteve 0,804 e a B, 0,841. A B emprega mais parâmetros e um bloco convolucional adicional, mas não isolamos qual mudança explica a diferença. As MLPs têm cerca de 132 vezes os parâmetros da CNN~A e mesmo assim ficaram atrás. Isso é compatível com a utilidade dos filtros locais e do compartilhamento de pesos nas imagens aéreas, sem provar superioridade universal.
 
-\textbf{Efeito da resolução.} \pend{Variação do F1 macro de teste: CNN~A de \res{CNN-A-128/f1_macro_teste} para \res{CNN-A-256/f1_macro_teste}; CNN~B de \res{CNN-B-128/f1_macro_teste} para \res{CNN-B-256/f1_macro_teste}. Verificar a hipótese do campo receptivo: a CNN~B ganhou mais que a A? Quais classes mais se beneficiaram (tanques, residencial densa, porto, que dependem de objetos pequenos)?}
+\textbf{Efeito da resolução.} A CNN~A passou de 0,804 para 0,809 de F1 de teste; a CNN~B caiu de 0,841 para 0,820. Logo, a hipótese de que o quarto bloco se beneficiaria mais de 256 pixels não foi confirmada. Na CNN~A, os maiores ganhos por classe foram tanques (+0,066), montanha (+0,064) e residencial densa (+0,063), mas rio e agrícola circular perderam 0,073 cada. Na CNN~B, aeroporto (-0,075), tanques (-0,063) e rio (-0,062) pioraram. Essas diferenças por classe são descritivas de um único treino.
 
-\textbf{Custo-benefício.} \pend{O tempo por época passou de \res{CNN-A-128/tempo_medio_epoca_s} para \res{CNN-A-256/tempo_medio_epoca_s}~s (CNN~A) e de \res{CNN-B-128/tempo_medio_epoca_s} para \res{CNN-B-256/tempo_medio_epoca_s}~s (CNN~B). O ganho de F1 compensa? O tamanho do modelo não muda com a resolução; o custo está na computação e na memória de ativações.}
+\textbf{Custo-benefício.} O tempo médio por época passou de \res{CNN-A-128/tempo_medio_epoca_s} para \res{CNN-A-256/tempo_medio_epoca_s}~s na CNN~A e de \res{CNN-B-128/tempo_medio_epoca_s} para \res{CNN-B-256/tempo_medio_epoca_s}~s na B. Os modelos salvos mantêm tamanho e número de parâmetros; o custo adicional vem das ativações e operações em imagens maiores. Nesta execução, 256 pixels não compensou o custo para a CNN~B e trouxe ganho muito pequeno para a A (Figura~\ref{fig:custo}).
 
-\textbf{Confusões e aspectos visuais.} \pend{Pares mais confundidos nas matrizes e relação com a análise exploratória (montanha × rio/floresta/deserto; aeroporto × residencial densa/tanques; praia × rio/porto). Comentar os erros da Figura~\ref{fig:erros}.}
+\textbf{Confusões e aspectos visuais.} Na CNN~B de 128 pixels, 21 rios foram classificados como montanha, 17 áreas agrícolas circulares como montanha e 11 desertos como montanha. Rio (F1 0,648) e montanha (0,672) foram as classes mais difíceis. A semelhança de textura e as sombras podem contribuir, mas as matrizes não identificam uma causa única. Entre os seis erros de maior confiança da Figura~\ref{fig:erros}, três desertos foram previstos como floresta ou montanha; houve ainda um tanque e um aeroporto previstos como residencial densa, e um rio como floresta. O alto grau de confiança mostra que esses casos merecem inspeção visual e análise de calibração.
 
-\textbf{Subajuste e sobreajuste.} \pend{Pelas curvas (Figura~\ref{fig:curvas}): distância entre perdas de treino e validação, época do checkpoint e comportamento após ele.}
+\textbf{Subajuste e sobreajuste.} As MLPs mantiveram perda de treino acima de 1,5 e F1 de teste próximo de 0,53, indícios de capacidade efetiva ou aprendizagem insuficiente sob o protocolo adotado. A CNN~B-128 teve perda de validação 0,515 no checkpoint da época 10 e 0,872 na época 12, enquanto a perda de treino caiu de 0,674 para 0,629. A divergência posterior ao checkpoint sugere sobreajuste ou instabilidade; salvar a melhor época evitou usar os pesos finais. As curvas de perda (Figura~\ref{fig:curvas}) e acurácia (Figura~\ref{fig:curvas-acc}) mostram as seis trajetórias.
 
 \textbf{Limites de generalização.} Cada configuração foi treinada uma única vez, com uma semente, então diferenças pequenas entre modelos podem estar dentro da variação aleatória entre execuções e não demonstram superioridade geral. O RESISC45 vem do Google Earth, com resolução espacial variável e regiões, estações e sensores misturados em todas as partições. Assim, o teste mede o desempenho em imagens da mesma distribuição, não em regiões, sensores ou épocas novas. O \textit{hash} perceptual detecta cópias e pequenas variações, mas não cenas vizinhas sobrepostas parcialmente, que podem tornar o teste otimista. Por fim, a resolução foi alterada por reamostragem da mesma imagem; uma imagem nativamente mais grosseira, capturada por outro sensor, tem ruído e borramento diferentes.
 
 \section{Conclusão}
 
-\pend{Responder em 4 a 6 frases às quatro perguntas da introdução, com os números principais, e indicar trabalhos futuros, como repetir os treinos com várias sementes, usar pesos pré-treinados (bônus YOLO) e validar em outra base, como a AID.}
+No recorte estudado, as CNNs em 128 pixels superaram as MLPs: a CNN~B selecionada na validação alcançou F1 macro de teste 0,841, contra 0,529 e 0,526 das MLPs. Dobrar a resolução trouxe ganho de apenas 0,005 para a CNN~A e perda de 0,021 para a B, com aproximadamente 2,4 vezes o tempo por época. Rio e montanha concentraram confusões relevantes, e a análise de seis erros de alta confiança indicou ambiguidades também entre deserto, floresta e área construída. Como cada configuração teve uma única execução e o teste compartilha a distribuição do conjunto original, os números não asseguram desempenho em novas regiões ou sensores. Trabalhos futuros incluem repetições com várias sementes, teste em outra base e comparação explícita com modelos pré-treinados; o bônus YOLO ainda não foi executado.
 
 \section*{Referências}
 {\small\setlength{\parindent}{0pt}\setlength{\parskip}{6pt}\raggedright

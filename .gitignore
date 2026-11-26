@@ -13,3 +13,4 @@ modelos/yolo/**/weights/
 *.rar
 *.part
 docs/src/build/
+tmp/

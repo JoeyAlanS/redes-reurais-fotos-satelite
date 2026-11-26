@@ -1,0 +1,13 @@
+Modelo: MLP_A_128
+camada          tipo                      saída                   parâmetros
+----------------------------------------------------------------------------
+imagem_rgb      InputLayer                128 x 128 x 3                    0
+vetor           Flatten                   49152                            0
+densa1          Dense                     256                     12.582.912
+bn1             BatchNormalization        256                          1.024
+relu1           ReLU                      256                              0
+dropout1        Dropout                   256                              0
+classe          Dense                     10                           2.570
+----------------------------------------------------------------------------
+Total de parâmetros: 12.586.506
+Treináveis: 12.585.994 | não treináveis (médias/variâncias do BatchNorm): 512

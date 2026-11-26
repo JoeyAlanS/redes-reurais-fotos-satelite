@@ -1,0 +1,27 @@
+Modelo: CNN_B_128
+camada          tipo                      saída                   parâmetros
+----------------------------------------------------------------------------
+imagem_rgb      InputLayer                128 x 128 x 3                    0
+conv1           Conv2D                    128 x 128 x 32                 864
+bn1             BatchNormalization        128 x 128 x 32                 128
+relu1           ReLU                      128 x 128 x 32                   0
+pool1           MaxPooling2D              64 x 64 x 32                     0
+conv2           Conv2D                    64 x 64 x 64                18.432
+bn2             BatchNormalization        64 x 64 x 64                   256
+relu2           ReLU                      64 x 64 x 64                     0
+pool2           MaxPooling2D              32 x 32 x 64                     0
+conv3           Conv2D                    32 x 32 x 128               73.728
+bn3             BatchNormalization        32 x 32 x 128                  512
+relu3           ReLU                      32 x 32 x 128                    0
+pool3           MaxPooling2D              16 x 16 x 128                    0
+conv4           Conv2D                    16 x 16 x 256              294.912
+bn4             BatchNormalization        16 x 16 x 256                1.024
+relu4           ReLU                      16 x 16 x 256                    0
+pool4           MaxPooling2D              8 x 8 x 256                      0
+gap             GlobalAveragePooling2D    256                              0
+densa1          Dense                     128                         32.896
+dropout         Dropout                   128                              0
+classe          Dense                     10                           1.290
+----------------------------------------------------------------------------
+Total de parâmetros: 424.042
+Treináveis: 423.082 | não treináveis (médias/variâncias do BatchNorm): 960

@@ -1,0 +1,110 @@
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1795660963.649488   28824 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+I0000 00:00:1795660963.725530   28824 cpu_feature_guard.cc:227] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1795660965.462747   28824 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+I0000 00:00:1795660968.452271   28824 gpu_device.cc:2043] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 1459 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2050, pci bus id: 0000:01:00.0, compute capability: 8.6
+/home/joey/Documentos/GitHub/redes-reurais-fotos-satelite/.venv/lib/python3.12/site-packages/keras/src/trainers/epoch_iterator.py:74: UserWarning: `shuffle=True` was passed, but will be ignored since the data `x` was provided as a tf.data.Dataset. The Dataset is expected to already be shuffled (via `.shuffle(buffer_size)`).
+  self.data_adapter = data_adapters.get_data_adapter(
+Modelo: MLP_A_128
+camada          tipo                      saída                   parâmetros
+----------------------------------------------------------------------------
+imagem_rgb      InputLayer                128 x 128 x 3                    0
+vetor           Flatten                   49152                            0
+densa1          Dense                     256                     12.582.912
+bn1             BatchNormalization        256                          1.024
+relu1           ReLU                      256                              0
+dropout1        Dropout                   256                              0
+classe          Dense                     10                           2.570
+----------------------------------------------------------------------------
+Total de parâmetros: 12.586.506
+Treináveis: 12.585.994 | não treináveis (médias/variâncias do BatchNorm): 512
+
+Epoch 1/12
+I0000 00:00:1795660974.032817   28905 service.cc:153] XLA service 0x7f8f8c0a6bb0 initialized for platform CUDA (this does not guarantee that XLA will be used). Devices:
+I0000 00:00:1795660974.032862   28905 service.cc:161]   StreamExecutor [0]: NVIDIA GeForce RTX 2050, Compute Capability 8.6 (Driver: 13.4.0; Runtime: 12.9.0; Toolkit: 12.5.0; DNN: 9.28.1)
+I0000 00:00:1795660974.080726   28905 dump_mlir_util.cc:269] disabling MLIR crash reproducer, set env var `MLIR_CRASH_REPRODUCER_DIRECTORY` to enable.
+I0000 00:00:1795660974.246004   28905 cuda_dnn.cc:461] Loaded cuDNN version 92801
+I0000 00:00:1795660974.313216   28905 dot_merger.cc:481] Merging Dots in computation: a_inference_one_step_on_data_1598__.18
+I0000 00:00:1795660978.923622   28905 device_compiler.h:208] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+I0000 00:00:1795660984.800048   28907 dot_merger.cc:481] Merging Dots in computation: a_inference_one_step_on_data_1598__.18
+ — val_f1_macro=0.3351 (melhor 0.3351 na época 1)
+613/613 - 24s - 39ms/step - accuracy: 0.3134 - loss: 1.9269 - val_accuracy: 0.3908 - val_loss: 1.6268 - val_f1_macro: 0.3351 - tempo_epoca_s: 23.4333
+Epoch 2/12
+ — val_f1_macro=0.3473 (melhor 0.3473 na época 2)
+613/613 - 7s - 12ms/step - accuracy: 0.3846 - loss: 1.7459 - val_accuracy: 0.4023 - val_loss: 1.6766 - val_f1_macro: 0.3473 - tempo_epoca_s: 7.1478
+Epoch 3/12
+ — val_f1_macro=0.4355 (melhor 0.4355 na época 3)
+613/613 - 7s - 12ms/step - accuracy: 0.3995 - loss: 1.6615 - val_accuracy: 0.4690 - val_loss: 1.4792 - val_f1_macro: 0.4355 - tempo_epoca_s: 7.1008
+Epoch 4/12
+ — val_f1_macro=0.4502 (melhor 0.4502 na época 4)
+613/613 - 7s - 12ms/step - accuracy: 0.4334 - loss: 1.5976 - val_accuracy: 0.4786 - val_loss: 1.4758 - val_f1_macro: 0.4502 - tempo_epoca_s: 7.1940
+Epoch 5/12
+ — val_f1_macro=0.4569 (melhor 0.4569 na época 5)
+613/613 - 7s - 12ms/step - accuracy: 0.4432 - loss: 1.5779 - val_accuracy: 0.4805 - val_loss: 1.4566 - val_f1_macro: 0.4569 - tempo_epoca_s: 7.2073
+Epoch 6/12
+ — val_f1_macro=0.4801 (melhor 0.4801 na época 6)
+613/613 - 7s - 12ms/step - accuracy: 0.4411 - loss: 1.5800 - val_accuracy: 0.5081 - val_loss: 1.4073 - val_f1_macro: 0.4801 - tempo_epoca_s: 7.1680
+Epoch 7/12
+ — val_f1_macro=0.5409 (melhor 0.5409 na época 7)
+613/613 - 7s - 12ms/step - accuracy: 0.4528 - loss: 1.5629 - val_accuracy: 0.5529 - val_loss: 1.3171 - val_f1_macro: 0.5409 - tempo_epoca_s: 7.1684
+Epoch 8/12
+ — val_f1_macro=0.5071 (melhor 0.5409 na época 7)
+613/613 - 7s - 12ms/step - accuracy: 0.4526 - loss: 1.5612 - val_accuracy: 0.5472 - val_loss: 1.3608 - val_f1_macro: 0.5071 - tempo_epoca_s: 7.1509
+Epoch 9/12
+ — val_f1_macro=0.4739 (melhor 0.5409 na época 7)
+613/613 - 7s - 12ms/step - accuracy: 0.4599 - loss: 1.5309 - val_accuracy: 0.5205 - val_loss: 1.3925 - val_f1_macro: 0.4739 - tempo_epoca_s: 7.2209
+Epoch 10/12
+ — val_f1_macro=0.4911 (melhor 0.5409 na época 7)
+613/613 - 7s - 12ms/step - accuracy: 0.4673 - loss: 1.5126 - val_accuracy: 0.5214 - val_loss: 1.3551 - val_f1_macro: 0.4911 - tempo_epoca_s: 7.1540
+Epoch 11/12
+ — val_f1_macro=0.5255 (melhor 0.5409 na época 7)
+613/613 - 7s - 12ms/step - accuracy: 0.4662 - loss: 1.4879 - val_accuracy: 0.5386 - val_loss: 1.3233 - val_f1_macro: 0.5255 - tempo_epoca_s: 7.1397
+{
+  "experimento": "MLP-A-128",
+  "familia": "MLP",
+  "variante": "A",
+  "resolucao": 128,
+  "parametros": 12586506,
+  "parametros_treinaveis": 12585994,
+  "funcao_perda": "sparse_categorical_crossentropy",
+  "otimizador": "Adam",
+  "taxa_aprendizagem": 0.001,
+  "lote": 8,
+  "limite_epocas": 12,
+  "criterio_parada": "F1 macro de validação sem melhora por 4 épocas; restaura a melhor época",
+  "paciencia": 4,
+  "epocas_executadas": 11,
+  "checkpoint_epoca": 7,
+  "f1_macro_validacao_checkpoint": 0.5408941351461254,
+  "acuracia_validacao_checkpoint": 0.5529075309818875,
+  "perda_validacao_checkpoint": 1.3171076774597168,
+  "imagens_treino": 4901,
+  "imagens_validacao": 1049,
+  "preprocessamento": "RGB, redimensionamento bilinear com antialias a partir do original 256x256, pixels/255",
+  "aumento": "espelhamento horizontal/vertical e rotação de 90° aleatórios (só treino)",
+  "semente": 42,
+  "tempo_total_segundos": 96.54373095900007,
+  "tempo_medio_epoca_segundos": 8.644112753181833,
+  "metodo_tempo": "time.perf_counter em volta de model.fit; inclui leitura/cache das imagens na 1ª época e a predição de validação usada no F1; exclui download e preparação das partições",
+  "tamanho_modelo_bytes": 50374712,
+  "hardware": {
+    "dispositivo": "GPU",
+    "gpus": [
+      "NVIDIA GeForce RTX 2050"
+    ],
+    "cpu": "12th Gen Intel(R) Core(TM) i5-12450H",
+    "nucleos_cpu": 12,
+    "sistema": "Linux-7.2.11-arch1-1-x86_64-with-glibc2.44"
+  },
+  "versoes": {
+    "python": "3.12.16",
+    "tensorflow": "2.21.0",
+    "keras": "3.15.1",
+    "numpy": "2.5.5",
+    "scikit-learn": "1.9.1",
+    "pillow": "12.3.0"
+  },
+  "data": "2026-11-26T02:44:30+00:00"
+}

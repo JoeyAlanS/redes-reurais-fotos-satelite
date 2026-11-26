@@ -1,0 +1,4 @@
+{
+  "modelo_analise_erros": "CNN-B-128",
+  "criterio": "maior F1 macro de validação"
+}
