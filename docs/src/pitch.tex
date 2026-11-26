@@ -113,11 +113,11 @@ CNN B & 4 blocos (até 256 filtros) → GAP → Dense 128 → 10 & 424 mil & cam
 \begin{columns}[T]
 \begin{column}{0.5\textwidth}
 \begin{itemize}
-\item Adam (0,001), entropia cruzada, lote 32, semente 42
-\item Até 40 épocas; para após 8 sem melhora
+\item Adam (0,001), entropia cruzada, lote 8, semente 42
+\item Até 12 épocas; para após 4 sem melhora
 \item Checkpoint = maior \textbf{F1 macro de validação}
 \item Mesmas condições para cada CNN nas duas resoluções
-\item Hardware: \pend{GPU utilizada}
+\item Hardware: NVIDIA GeForce RTX 2050 (4~GB)
 \end{itemize}
 \end{column}
 \begin{column}{0.46\textwidth}
@@ -143,13 +143,13 @@ CNN-B-256 & \res{CNN-B-256/f1_macro_validacao} & \res{CNN-B-256/acuracia_teste} 
 \end{tabular}
 \vskip4mm
 \raggedright
-\destaque{\pend{Mensagem principal em uma frase: quem venceu, por quanto e a que custo.}}
+\destaque{A CNN-B-128 venceu na validação (F1 0,820) e obteve 0,841 no teste; em 256 px, custou 2,39 vezes mais por época e caiu para 0,820.}
 \end{frame}
 
 \begin{frame}{Curvas de aprendizagem}
 \centering\figuraarq{0.92\linewidth}{4.9cm}{painel_curvas_perda.png}{scripts/avaliar.py}
 \vskip2mm
-\raggedright\small\pend{Subajuste ou sobreajuste? Em que época está cada checkpoint? A MLP diverge cedo entre treino e validação?}
+\raggedright\small As MLPs ficaram perto de F1 0,53 no teste. A CNN-B-128 atingiu o checkpoint na época 10; depois, a perda de validação subiu de 0,515 para 0,872, enquanto a de treino caiu.
 \end{frame}
 
 \begin{frame}{MLP × CNN em 128\,×\,128}
@@ -158,7 +158,7 @@ CNN-B-256 & \res{CNN-B-256/f1_macro_validacao} & \res{CNN-B-256/acuracia_teste} 
 \begin{itemize}
 \item MLP A: \res{MLP-A-128/f1_macro_teste} \quad MLP B: \res{MLP-B-128/f1_macro_teste}
 \item CNN A: \res{CNN-A-128/f1_macro_teste} \quad CNN B: \res{CNN-B-128/f1_macro_teste}
-\item \pend{A profundidade ajudou a MLP? A CNN, com 132× menos parâmetros, venceu?}
+\item A profundidade não melhorou a MLP nesta execução; a CNN A venceu com cerca de 132 vezes menos parâmetros.
 \end{itemize}
 \end{column}
 \begin{column}{0.58\textwidth}
@@ -176,7 +176,7 @@ CNN-B-256 & \res{CNN-B-256/f1_macro_validacao} & \res{CNN-B-256/acuracia_teste} 
 \item CNN B: \res{CNN-B-128/f1_macro_teste} → \res{CNN-B-256/f1_macro_teste}
 \item Tempo/época A: \res{CNN-A-128/tempo_medio_epoca_s} → \res{CNN-A-256/tempo_medio_epoca_s} s
 \item Tempo/época B: \res{CNN-B-128/tempo_medio_epoca_s} → \res{CNN-B-256/tempo_medio_epoca_s} s
-\item \pend{Compensa? A CNN B ganhou mais, como previa o campo receptivo?}
+\item Não compensou: ganho de 0,005 na A e perda de 0,021 na B, com cerca de 2,4 vezes o tempo por época.
 \end{itemize}
 \end{column}
 \begin{column}{0.58\textwidth}
@@ -189,11 +189,11 @@ CNN-B-256 & \res{CNN-B-256/f1_macro_validacao} & \res{CNN-B-256/acuracia_teste} 
 \begin{columns}[T]
 \begin{column}{0.3\textwidth}
 \small
-\pend{Top 3 pares confundidos e a explicação visual:}
+\textbf{CNN-B-128 (teste):}
 \begin{itemize}
-\item \pend{montanha ↔ …}
-\item \pend{aeroporto ↔ …}
-\item \pend{praia ↔ …}
+\item Rio → montanha: 21 imagens
+\item Agrícola circular → montanha: 17
+\item Deserto → montanha: 11
 \end{itemize}
 \end{column}
 \begin{column}{0.67\textwidth}
@@ -206,7 +206,7 @@ CNN-B-256 & \res{CNN-B-256/f1_macro_validacao} & \res{CNN-B-256/acuracia_teste} 
 \centering\figuraarq{\linewidth}{3.9cm}{erros_teste.png}{scripts/avaliar.py}
 \vskip3mm
 \raggedright\small Modelo de maior F1 macro de validação; seis erros de teste com maior confiança.\\
-\pend{O que cada erro revela: rótulo ambíguo, contexto dominante ou detalhe perdido?}
+Três desertos foram previstos como floresta ou montanha; um tanque e um aeroporto, como residencial densa. A imagem isolada não permite atribuir causa única ao erro.
 \end{frame}
 
 \fala{Paulo}
@@ -216,17 +216,17 @@ CNN-B-256 & \res{CNN-B-256/f1_macro_validacao} & \res{CNN-B-256/acuracia_teste} 
 \item \textbf{Mesma distribuição:} o teste vem do mesmo Google Earth, não de novas regiões, sensores ou estações
 \item \textbf{Quase-duplicatas:} o \textit{hash} não pega cenas vizinhas parcialmente sobrepostas, então o teste pode ser otimista
 \item \textbf{Resolução simulada:} reduzimos a mesma imagem; um sensor mais grosseiro real tem outro ruído e outro borramento
-\item \textbf{Sem pré-treino} nos 6 modelos (exigência do projeto); o bônus YOLO mostra o efeito do pré-treino
+\item \textbf{Sem pré-treino} nos 6 modelos; o bônus YOLO pré-treinado ainda não foi executado
 \end{itemize}
 \end{frame}
 
 \fala{Paulo e Joey}
 \begin{frame}{Conclusões}
 \begin{enumerate}
-\item \pend{MLP × CNN: …}
-\item \pend{Resolução: …}
-\item \pend{Custo-benefício: …}
-\item \pend{Classes difíceis: …}
+\item As CNNs em 128 px superaram as MLPs (melhor F1 de teste: 0,841 contra 0,529).
+\item Dobrar a resolução trouxe ganho de 0,005 na CNN A e perda de 0,021 na B.
+\item O tempo por época das CNNs aumentou cerca de 2,4 vezes em 256 px.
+\item Rio e montanha concentraram confusões relevantes.
 \end{enumerate}
 \vskip4mm
 \destaque{\textbf{Próximos passos:} repetir com várias sementes, testar pesos pré-treinados e validar em outra base (por exemplo, AID).}

@@ -161,8 +161,8 @@ CNN B & 4 blocos (32/64/128/256) → GAP → Dense 128 → 10 & 424.042 & campo 
 \begin{column}{0.5\textwidth}
 \begin{itemize}
 \item TensorFlow/Keras, pesos novos, semente 42
-\item Entropia cruzada, Adam (0,001), lote 32
-\item Até 40 épocas; para após \textbf{8 sem melhora}
+\item Entropia cruzada, Adam (0,001), lote 8
+\item Até 12 épocas; para após \textbf{4 sem melhora}
 \item Checkpoint = época de maior \textbf{F1 macro de validação}
 \item Aumento só no treino: espelhamentos e giros de 90°
 \end{itemize}
@@ -195,7 +195,7 @@ Num teste de 2 épocas com o \textit{BatchNorm} padrão do Keras:
 \end{frame}
 
 \fala{Paulo e Joey}
-\begin{frame}{Resultados de validação (teste não avaliado)}
+\begin{frame}{Resultados de validação (sem métricas de teste)}
 \begin{columns}[T]
 \begin{column}{0.42\textwidth}
 \centering\small
@@ -212,7 +212,7 @@ CNN-B-256 & \res{CNN-B-256/acuracia_validacao} & \res{CNN-B-256/f1_macro_validac
 \bottomrule
 \end{tabular}
 \vskip3mm
-\raggedright\footnotesize Mínimo exigido: uma MLP e uma CNN. Tempo por época: \pend{preencher}.
+\raggedright\footnotesize Mínimo exigido: uma MLP e uma CNN. Tempo médio por época: MLP A \res{MLP-A-128/tempo_medio_epoca_s}~s; CNN A \res{CNN-A-128/tempo_medio_epoca_s}~s (128 px).
 \end{column}
 \begin{column}{0.55\textwidth}
 \centering\figuraarq{\linewidth}{5.2cm}{painel_curvas_perda.png}{scripts/prever.py e scripts/avaliar.py (só validação)}
@@ -221,7 +221,7 @@ CNN-B-256 & \res{CNN-B-256/acuracia_validacao} & \res{CNN-B-256/f1_macro_validac
 \end{frame}
 
 \fala{Joey}
-\begin{frame}{Próximos passos}
+\begin{frame}{Etapas posteriores ao acompanhamento}
 \begin{enumerate}
 \item Concluir os seis treinamentos no mesmo hardware (GPU) e salvar checkpoints e históricos
 \item Comparar pela validação e fechar as escolhas, sem olhar o teste
