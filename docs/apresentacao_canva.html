@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1920, initial-scale=1">
+<title>Classificação de cenas aéreas com redes neurais</title>
+<style>
+  :root { --azul:#4e82b5; --ciano:#4b9eb7; --escuro:#172735; --cinza:#526476; --claro:#e9f3f8; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; padding:0; font-family:Arial,Helvetica,sans-serif; color:var(--escuro); background:#fff; }
+  .slide { position:relative; width:1920px; height:1080px; overflow:hidden; background:#fff; page-break-after:always; }
+  .slide::before { content:""; position:absolute; inset:0; background-image:linear-gradient(#e8f2f7 1px,transparent 1px),linear-gradient(90deg,#e8f2f7 1px,transparent 1px); background-size:100px 100px; opacity:.32; pointer-events:none; }
+  .slide::after { content:""; position:absolute; right:-120px; top:-160px; width:380px; height:380px; border:44px solid #72bdd0; border-radius:50%; opacity:.85; pointer-events:none; }
+  .dots { position:absolute; right:103px; top:54px; width:148px; height:76px; background-image:radial-gradient(#172735 2px,transparent 2.5px); background-size:20px 20px; z-index:2; }
+  .bottom-arc { position:absolute; left:-145px; bottom:-150px; width:300px; height:300px; border:32px solid var(--ciano); border-radius:50%; }
+  .content { position:relative; z-index:1; padding:66px 104px 80px; height:100%; }
+  .kicker { font-size:27px; color:var(--ciano); font-weight:700; letter-spacing:.05em; text-transform:uppercase; margin:0 0 18px; }
+  h1 { margin:0; font-size:91px; letter-spacing:-.045em; line-height:1.02; max-width:1450px; color:#050b10; }
+  h2 { margin:0 0 20px; font-size:66px; letter-spacing:-.04em; line-height:1.06; color:#050b10; }
+  h3 { font-size:38px; margin:0 0 18px; color:var(--escuro); }
+  .underline { width:205px; height:10px; background:var(--azul); margin:8px 0 38px; }
+  .subtitle { font-size:37px; line-height:1.25; color:var(--ciano); font-weight:700; max-width:1350px; }
+  .lead { font-size:35px; line-height:1.32; max-width:1500px; margin:0; }
+  .body { font-size:32px; line-height:1.35; }
+  .small { font-size:25px; line-height:1.35; }
+  .two { display:grid; grid-template-columns: 1fr 1fr; gap:64px; align-items:center; }
+  .three { display:grid; grid-template-columns: repeat(3,1fr); gap:40px; }
+  .figure { display:block; width:100%; object-fit:contain; background:#fff; }
+  .figure.wide { width:100%; max-height:745px; }
+  .figure.medium { max-height:725px; }
+  .figure.short { max-height:620px; }
+  .caption { position:absolute; left:104px; bottom:42px; font-size:21px; color:var(--cinza); }
+  .pageno { position:absolute; right:100px; bottom:42px; font-size:21px; color:var(--cinza); }
+  .accent { color:var(--ciano); }
+  .big-number { font-size:102px; line-height:1; color:var(--azul); font-weight:800; letter-spacing:-.06em; }
+  .metric { font-size:28px; color:var(--cinza); margin-top:8px; }
+  .rule { border-top:2px solid #d4e5ef; padding-top:16px; }
+  .bar-title { display:inline-block; background:#77bed1; color:#07131d; padding:8px 20px; font-size:30px; font-weight:700; margin-bottom:20px; }
+  ul { padding-left:38px; margin:14px 0; }
+  li { margin-bottom:17px; }
+  table { border-collapse:collapse; width:100%; font-size:29px; background:#fff; }
+  th { color:#fff; background:var(--azul); text-align:left; padding:15px 20px; }
+  td { border-bottom:2px solid #cbddea; padding:15px 20px; }
+  tr:nth-child(even) td { background:#eef6fa; }
+  .selected td { font-weight:700; color:#073d52; background:#d7eff4 !important; }
+  .tag { font-size:24px; font-weight:700; color:var(--azul); text-transform:uppercase; margin-bottom:20px; }
+  .stack { display:flex; flex-direction:column; gap:22px; }
+  .item { border-left:8px solid var(--ciano); padding-left:22px; font-size:32px; line-height:1.25; }
+  .model { padding:20px 0 20px 28px; border-left:9px solid var(--ciano); margin-bottom:22px; }
+  .model strong { font-size:39px; }
+  .model span { display:block; font-size:27px; color:var(--cinza); margin-top:8px; }
+  .note { background:#e6f2f8; padding:19px 28px; border-radius:8px; font-size:29px; line-height:1.3; }
+  .cover .content { padding-top:245px; }
+  .cover h1 { max-width:1290px; }
+  .cover .subtitle { margin-top:34px; }
+  .cover .authors { position:absolute; left:104px; bottom:95px; font-size:30px; font-weight:700; }
+  .cover .dots { left:104px; top:75px; }
+  .cover::after { width:520px; height:520px; right:-140px; top:-155px; border-width:60px; }
+  @page { size:1920px 1080px; margin:0; }
+  @media print { html,body { width:1920px; } .slide { break-after:page; } }
+</style>
+</head>
+<body>
+
+<section class="slide cover" data-document-role="page" data-label="Capa" data-speaker-notes="Projeto 3. Autores: Paulo Henrico Rabelo e Joey Alan. Visual inspirado na apresentação de Canva fornecida pelo usuário, sem reutilizar seu conteúdo.">
+  <div class="dots"></div><div class="bottom-arc"></div>
+  <div class="content">
+    <div class="kicker">Projeto 3</div>
+    <h1>CLASSIFICAÇÃO DE CENAS AÉREAS COM REDES NEURAIS</h1>
+    <div class="subtitle">MLP, CNN e o efeito da resolução no NWPU-RESISC45</div>
+    <div class="authors">Paulo Henrico Rabelo &nbsp;·&nbsp; Joey Alan</div>
+  </div>
+</section>
+
+<section class="slide" data-document-role="page" data-label="Problema" data-speaker-notes="Fonte: documentação e artigo do projeto; exemplos visuais do subconjunto de treino NWPU-RESISC45.">
+  <div class="dots"></div><div class="bottom-arc"></div>
+  <div class="content">
+    <h2>O PROBLEMA</h2><div class="underline"></div>
+    <div class="two" style="grid-template-columns: .62fr 1fr; gap:50px;">
+      <div class="body">
+        <div class="bar-title">Uma imagem, uma classe</div>
+        <p>Identificar o tipo de cena em fotos aéreas: aeroporto, floresta, rio ou porto.</p>
+        <p>Comparamos arquiteturas e tamanhos de imagem sob o mesmo protocolo de treino.</p>
+      </div>
+      <img class="figure medium" src="../resultados/figuras/eda_ambiguidades.png" alt="Cenas de treino com aparência semelhante entre classes">
+    </div>
+    <div class="caption">Fonte: exploração do conjunto de treino NWPU-RESISC45</div><div class="pageno">02</div>
+  </div>
+</section>
+
+<section class="slide" data-document-role="page" data-label="Base de dados" data-speaker-notes="Fonte: dados/splits/inventario.json. Os totais são exatos e a validação tem 1.049 imagens por causa do agrupamento de similares.">
+  <div class="dots"></div><div class="bottom-arc"></div>
+  <div class="content">
+    <h2>DADOS E PARTIÇÕES</h2><div class="underline"></div>
+    <div class="three" style="margin-top:65px;">
+      <div><div class="big-number">7.000</div><div class="metric">imagens RGB de 256 × 256 px</div></div>
+      <div><div class="big-number">10</div><div class="metric">classes com 700 imagens cada</div></div>
+      <div><div class="big-number">42</div><div class="metric">semente fixa da divisão</div></div>
+    </div>
+    <div class="bar-title" style="margin-top:92px;">Uma divisão reutilizada nos seis modelos</div>
+    <div class="three" style="margin-top:20px;">
+      <div class="rule"><div class="big-number" style="font-size:70px;">4.901</div><div class="metric">treino · 70%</div></div>
+      <div class="rule"><div class="big-number" style="font-size:70px;">1.049</div><div class="metric">validação · 15%</div></div>
+      <div class="rule"><div class="big-number" style="font-size:70px;">1.050</div><div class="metric">teste · 15%</div></div>
+    </div>
+    <div class="caption">Fonte: dados/splits/inventario.json</div><div class="pageno">03</div>
+  </div>
+</section>
+
+<section class="slide" data-document-role="page" data-label="Preparação" data-speaker-notes="Fonte: scripts/preparar_dados.py, dados/splits/particoes.csv e documentação do projeto. O teste foi reservado para avaliação final.">
+  <div class="dots"></div><div class="bottom-arc"></div>
+  <div class="content">
+    <h2>PREPARAÇÃO DOS DADOS</h2><div class="underline"></div>
+    <div class="three" style="margin-top:70px;">
+      <div class="model"><strong>01 &nbsp; Similaridade</strong><span>SHA-256 e dHash agrupam cópias e versões próximas da mesma cena.</span></div>
+      <div class="model"><strong>02 &nbsp; Partição</strong><span>Cada grupo fica inteiro em treino, validação ou teste.</span></div>
+      <div class="model"><strong>03 &nbsp; Treino</strong><span>Pixels divididos por 255; espelhos e giros só no treino.</span></div>
+    </div>
+    <div class="note" style="margin-top:95px;">As escolhas de arquitetura e checkpoint usaram a validação. O teste foi avaliado no fim.</div>
+    <div class="caption">Fonte: scripts/preparar_dados.py e dados/splits/particoes.csv</div><div class="pageno">04</div>
+  </div>
+</section>
+
+<section class="slide" data-document-role="page" data-label="Arquiteturas" data-speaker-notes="Fonte: resultados/arquiteturas.csv e src/projeto3/models.py. CNN A tem 95.210 parâmetros; CNN B, 424.042.">
+  <div class="dots"></div><div class="bottom-arc"></div>
+  <div class="content">
+    <h2>QUATRO ARQUITETURAS</h2><div class="underline"></div>
+    <div class="two" style="align-items:start; gap:100px; margin-top:45px;">
+      <div><div class="tag">Imagem como vetor</div>
+        <div class="model"><strong>MLP A</strong><span>1 camada oculta · 12,59 milhões de parâmetros</span></div>
+        <div class="model"><strong>MLP B</strong><span>3 camadas ocultas · 12,63 milhões de parâmetros</span></div>
+      </div>
+      <div><div class="tag">Padrões espaciais</div>
+        <div class="model"><strong>CNN A</strong><span>3 blocos convolucionais · 95 mil parâmetros</span></div>
+        <div class="model"><strong>CNN B</strong><span>4 blocos convolucionais · 424 mil parâmetros</span></div>
+      </div>
+    </div>
+    <div class="note" style="margin-top:35px;">As duas CNNs foram treinadas em 128 e 256 px. A contagem de parâmetros permanece igual entre as resoluções.</div>
+    <div class="caption">Fonte: resultados/arquiteturas.csv</div><div class="pageno">05</div>
+  </div>
+</section>
+
+<section class="slide" data-document-role="page" data-label="Protocolo de treino" data-speaker-notes="Fonte: resultados/experimentos.csv e scripts/treinar.py. Os seis treinos foram executados na NVIDIA GeForce RTX 2050.">
+  <div class="dots"></div><div class="bottom-arc"></div>
+  <div class="content">
+    <h2>TREINO NA RTX 2050</h2><div class="underline"></div>
+    <div class="three" style="margin-top:75px;">
+      <div><div class="big-number">8</div><div class="metric">imagens por lote</div></div>
+      <div><div class="big-number">12</div><div class="metric">épocas no máximo</div></div>
+      <div><div class="big-number">4</div><div class="metric">épocas de paciência</div></div>
+    </div>
+    <div class="note" style="margin-top:100px;">O checkpoint foi escolhido pelo maior F1 macro de validação. Cada configuração teve um treino com pesos novos.</div>
+    <div class="body" style="margin-top:40px;">Adam (0,001) e entropia cruzada. As CNNs mantiveram o mesmo número de parâmetros em 128 e 256 px.</div>
+    <div class="caption">Fonte: scripts/treinar.py e resultados/experimentos.csv</div><div class="pageno">06</div>
+  </div>
+</section>
+
+<section class="slide" data-document-role="page" data-label="Resultados dos seis modelos" data-speaker-notes="Fonte: resultados/experimentos.csv. F1 macro é a média não ponderada do F1 das dez classes. A escolha do modelo ocorreu pela validação.">
+  <div class="dots"></div><div class="bottom-arc"></div>
+  <div class="content">
+    <h2>RESULTADOS NO TESTE</h2><div class="underline"></div>
+    <table style="margin-top:20px;">
+      <thead><tr><th>Modelo</th><th>F1 validação</th><th>F1 teste</th><th>Acurácia teste</th><th>Tempo de treino</th></tr></thead>
+      <tbody>
+        <tr><td>MLP A · 128 px</td><td>0,541</td><td>0,530</td><td>0,543</td><td>96,5 s</td></tr>
+        <tr><td>MLP B · 128 px</td><td>0,533</td><td>0,526</td><td>0,557</td><td>118,2 s</td></tr>
+        <tr><td>CNN A · 128 px</td><td>0,817</td><td>0,804</td><td>0,810</td><td>157,1 s</td></tr>
+        <tr class="selected"><td>CNN B · 128 px</td><td>0,820</td><td>0,841</td><td>0,839</td><td>182,3 s</td></tr>
+        <tr><td>CNN A · 256 px</td><td>0,807</td><td>0,810</td><td>0,814</td><td>380,3 s</td></tr>
+        <tr><td>CNN B · 256 px</td><td>0,817</td><td>0,820</td><td>0,820</td><td>434,6 s</td></tr>
+      </tbody>
+    </table>
+    <div class="small" style="margin-top:22px;">A CNN B de 128 px venceu na validação e foi selecionada para a análise de erros.</div>
+    <div class="caption">Fonte: resultados/experimentos.csv · valores arredondados a 3 casas</div><div class="pageno">07</div>
+  </div>
+</section>
+
+<section class="slide" data-document-role="page" data-label="Evolução do modelo" data-speaker-notes="Fonte do gráfico: resultados/historicos/CNN-B-128.csv. O melhor F1 macro de validação ocorreu na época 10.">
+  <div class="dots"></div><div class="bottom-arc"></div>
+  <div class="content">
+    <h2>EVOLUÇÃO DA CNN B · 128 PX</h2><div class="underline"></div>
+    <img class="figure wide" src="../resultados/figuras/apresentacao_trajetoria_cnn_b_128.png" alt="Evolução de acurácia e F1 macro nas doze épocas">
+    <div class="caption">Fonte: resultados/historicos/CNN-B-128.csv</div><div class="pageno">08</div>
+  </div>
+</section>
+
+<section class="slide" data-document-role="page" data-label="Efeito da resolução" data-speaker-notes="Fonte do gráfico: resultados/experimentos.csv. A CNN B caiu de 0,8410 para 0,8204 no F1 de teste ao passar de 128 para 256 px. O treino total passou de 182,3 para 434,6 s. Resultado de uma execução por configuração.">
+  <div class="dots"></div><div class="bottom-arc"></div>
+  <div class="content">
+    <h2>O EFEITO DA RESOLUÇÃO</h2><div class="underline"></div>
+    <img class="figure wide" src="../resultados/figuras/apresentacao_efeito_resolucao.png" alt="F1 macro da CNN A e B em 128 e 256 pixels, com comparação de custo">
+    <div class="caption">Fonte: resultados/experimentos.csv · uma execução por configuração</div><div class="pageno">09</div>
+  </div>
+</section>
+
+<section class="slide" data-document-role="page" data-label="Desempenho por classe" data-speaker-notes="Fonte do gráfico: resultados/metricas/CNN-B-128_teste_por_classe.csv. Cada classe tem 105 imagens no teste. Rio teve recall de 56,19%; montanha, 84,76%.">
+  <div class="dots"></div><div class="bottom-arc"></div>
+  <div class="content">
+    <h2>DESEMPENHO POR CLASSE</h2><div class="underline"></div>
+    <img class="figure wide" src="../resultados/figuras/apresentacao_metricas_por_classe.png" alt="Barras de precisão e recall para dez classes da CNN B de 128 pixels">
+    <div class="caption">Fonte: resultados/metricas/CNN-B-128_teste_por_classe.csv</div><div class="pageno">10</div>
+  </div>
+</section>
+
+<section class="slide" data-document-role="page" data-label="Confusões" data-speaker-notes="Fonte do gráfico: resultados/metricas/CNN-B-128_teste_confusao.csv. O par mais frequente foi rio classificado como montanha, 21 casos.">
+  <div class="dots"></div><div class="bottom-arc"></div>
+  <div class="content">
+    <h2>ONDE A CNN SE CONFUNDIU</h2><div class="underline"></div>
+    <img class="figure wide" src="../resultados/figuras/apresentacao_maiores_confusoes.png" alt="Oito erros direcionados mais frequentes da CNN B de 128 pixels">
+    <div class="caption">Fonte: resultados/metricas/CNN-B-128_teste_confusao.csv</div><div class="pageno">11</div>
+  </div>
+</section>
+
+<section class="slide" data-document-role="page" data-label="Exemplos de erros" data-speaker-notes="Fonte: resultados/erros_teste.csv e resultados/figuras/erros_teste.png. São os seis erros de maior confiança da CNN-B-128 no teste; uma imagem isolada não prova a causa do erro.">
+  <div class="dots"></div><div class="bottom-arc"></div>
+  <div class="content">
+    <h2>ERROS COM ALTA CONFIANÇA</h2><div class="underline"></div>
+    <img class="figure" style="max-height:560px; margin-top:48px;" src="../resultados/figuras/erros_teste.png" alt="Seis cenas de teste classificadas incorretamente com alta confiança">
+    <div class="note" style="margin-top:45px;">A imagem isolada não permite atribuir uma causa única ao erro.</div>
+    <div class="caption">Fonte: resultados/erros_teste.csv e resultados/figuras/erros_teste.png</div><div class="pageno">12</div>
+  </div>
+</section>
+
+<section class="slide" data-document-role="page" data-label="Limitações" data-speaker-notes="Limitações metodológicas discutidas no artigo. O bônus YOLO pré-treinado não foi executado; não há resultado quantitativo dele nesta apresentação.">
+  <div class="dots"></div><div class="bottom-arc"></div>
+  <div class="content">
+    <h2>LIMITAÇÕES</h2><div class="underline"></div>
+    <div class="stack" style="margin-top:60px; max-width:1500px;">
+      <div class="item"><strong>Uma execução por configuração.</strong> Diferenças pequenas podem variar com a semente.</div>
+      <div class="item"><strong>Teste da mesma distribuição.</strong> Não mede desempenho em novas regiões ou sensores.</div>
+      <div class="item"><strong>Resolução simulada.</strong> Reduzir a imagem não reproduz o ruído de outro sensor.</div>
+      <div class="item"><strong>Hash de imagens.</strong> Cenas parcialmente sobrepostas podem escapar da detecção.</div>
+    </div>
+    <div class="small" style="margin-top:58px; color:var(--cinza);">O bônus YOLO pré-treinado permanece como trabalho futuro.</div>
+    <div class="caption">Fonte: docs/artigo.pdf, seção de limitações</div><div class="pageno">13</div>
+  </div>
+</section>
+
+<section class="slide" data-document-role="page" data-label="Conclusões" data-speaker-notes="Resultados observados nesta execução. Fonte: resultados/experimentos.csv e resultados/metricas/CNN-B-128_teste_confusao.csv. Próximos passos propostos no artigo.">
+  <div class="dots"></div><div class="bottom-arc"></div>
+  <div class="content">
+    <h2>CONCLUSÕES</h2><div class="underline"></div>
+    <div class="three" style="margin-top:75px;">
+      <div><div class="big-number">0,841</div><div class="metric">F1 macro da CNN B · 128 px no teste</div></div>
+      <div><div class="big-number">−2,1</div><div class="metric">pontos percentuais de F1 ao usar 256 px na CNN B</div></div>
+      <div><div class="big-number">21</div><div class="metric">rios classificados como montanha</div></div>
+    </div>
+    <div class="bar-title" style="margin-top:105px;">Próximos passos</div>
+    <div class="body">Repetir os treinos com várias sementes e validar em outra base de cenas aéreas.</div>
+    <div class="caption">Fonte: resultados/experimentos.csv e matriz de confusão da CNN B · 128 px</div><div class="pageno">14</div>
+  </div>
+</section>
+
+</body>
+</html>

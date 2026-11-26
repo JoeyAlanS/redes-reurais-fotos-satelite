@@ -164,6 +164,28 @@ Os metadados, resumos e hashes SHA-256 ficam versionados em `modelos/`. O profes
 
 O script roda `scripts/dados_docs.py`, que lê `dados/splits/inventario.json`, `resultados/experimentos.csv` e `resultados/selecao.json` e grava os números em `docs/src/gerado/dados.tex`. Depois, compila com XeLaTeX ou Tectonic. O artigo foi atualizado com os seis resultados, gráficos e discussão; acompanhamento e pitch ainda exigem revisão dos autores antes da entrega. O acompanhamento não deve mostrar métricas de teste.
 
+### Apresentação no Canva e gráficos adicionais
+
+A [apresentação editável no Canva](https://www.canva.com/d/Hp0Pc7KYV-WWPwz) tem 14 slides. O visual segue como referência o modelo fornecido pelos autores; o conteúdo usa somente os resultados medidos deste projeto. Uma [cópia em PDF](docs/apresentacao_canva.pdf) permite apresentar sem conexão. O [HTML fonte](docs/apresentacao_canva.html) e o [pacote para reimportação](docs/apresentacao_canva.zip) também estão versionados.
+
+Quatro gráficos novos são gerados dos CSVs, sem valores simulados:
+
+| Gráfico | Fonte dos dados |
+| --- | --- |
+| Efeito da resolução nas CNNs | `resultados/experimentos.csv` |
+| Precisão e recall por classe da CNN-B-128 | `resultados/metricas/CNN-B-128_teste_por_classe.csv` |
+| Confusões mais frequentes da CNN-B-128 | `resultados/metricas/CNN-B-128_teste_confusao.csv` |
+| Evolução e checkpoint da CNN-B-128 | `resultados/historicos/CNN-B-128.csv` |
+
+Para regenerar os gráficos e o pacote de importação:
+
+```bash
+.venv/bin/python scripts/graficos_apresentacao.py
+.venv/bin/python scripts/empacotar_slides_canva.py
+```
+
+Os gráficos ficam em `resultados/figuras/apresentacao_*.png`. Se os dados forem atualizados, regenere os gráficos e o pacote antes de revisar os slides; o PDF e a apresentação no Canva não são atualizados automaticamente. Os gráficos inseridos no Canva são imagens; o texto e os demais elementos dos slides podem ser editados no editor.
+
 ## Estrutura
 
 ```text
@@ -171,10 +193,10 @@ dados/raw/            ZIP e imagens (fora do Git)
 dados/splits/         particoes.csv, inventario.json, quase_duplicatas.csv
 notebooks/            00_colab_treino.ipynb, 01_exploracao.ipynb, 02_resultados.ipynb
 src/projeto3/         classes, preparação, dataset, modelos, avaliação
-scripts/              preparar_dados, resumo_arquiteturas, treinar, prever, avaliar, yolo_bonus, dados_docs, executar_tudo
+scripts/              preparar_dados, resumo_arquiteturas, treinar, prever, avaliar, yolo_bonus, dados_docs, graficos_apresentacao, empacotar_slides_canva
 modelos/              checkpoints (fora do Git) e metadados .json
 resultados/           experimentos.csv, previsoes_teste.csv, historicos/, previsoes/, metricas/, figuras/
-docs/                 acompanhamento.pdf, artigo.pdf, pitch.pdf; fontes LaTeX em docs/src/
+docs/                 acompanhamento.pdf, artigo.pdf, pitch.pdf, apresentacao_canva.{html,zip,pdf}; fontes LaTeX em docs/src/
 ```
 
 ## Referências
